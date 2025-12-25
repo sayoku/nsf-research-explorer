@@ -55,7 +55,7 @@ nsf-research-explorer/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/nsf-research-explorer.git
+   git clone https://github.com/sayoku/nsf-research-explorer.git
    cd nsf-research-explorer
    ```
 
@@ -63,7 +63,7 @@ nsf-research-explorer/
    ```bash
    # Using venv
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   source venv/bin/activate  
    ```
 
 3. **Install dependencies**
