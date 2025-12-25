@@ -88,6 +88,7 @@ nsf-research-explorer/
 ### Running the Application
 
 ```bash
+
 streamlit run app.py
 ```
 
