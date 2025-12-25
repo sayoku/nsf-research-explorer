@@ -35,11 +35,9 @@ nsf-research-explorer/
 │   ├── agent/
 │   ├── knowledge_graph/
 │   └── visualization/
-├── data/
-│   ├── raw/                       # Raw NSF data
-│   └── processed/                 # Processed graph data
+├── data/               
 ├── tests/
-├── app.py                         # Main Streamlit application
+├── app.py                         
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
