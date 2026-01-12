@@ -166,16 +166,16 @@ class NSFAgent:
             return "No results found."
         # Get the count and awards (in a list)
         total_count = results['response']['metadata'].get('totalCount',0)
-        awards = api_response['response']['metadata'].get('award', [])
+        awards = api_response['response'].get('award', [])
         # Combine
         summary = {'total_count':total_count, 'awards':[]}
         
         # Extract info from top 10
         for award in awards[:10]:
             summary['awards'].append({
-                'title': award.get('title', 'N/A'),
+                'title': award.get('fundProgramName', 'N/A'),
                 'institution': award.get('awardeeName', 'N/A'),
-                'amount': award.get('estimatedTotalAmt', 'N/A'),
+                'amount': award.get('estimatedTotalAmt*', 'N/A'),
                 'start_date': award.get('startDate', 'N/A'),
                 'abstract': award.get('abstractText', 'N/A')[:500]}) 
         
