@@ -55,7 +55,7 @@ class NSFAgent:
         """
         self.client = Anthropic(api_key=api_key or os.environ.get("ANTHROPIC_API_KEY"))
 
-        system_prompt = """
+        self.system_prompt = """
 
         You are a translator for NSF Research Award Queries. Your job is to take user responses and reformat them into a json of request parameters and values. 
         A full list of request parameters may be found on the NSF API, but key request parameters include:
@@ -110,8 +110,25 @@ class NSFAgent:
                 {"role": "user", "content": query}
             ]
         )
-        response = message.content[0].text
-        return response
+        # This is the raw response
+        response_raw = message.content[0].text
+        response = ""
+        # Take the json and find the start and end to the information we want
+        if "```json" in response_raw:
+            start = response_raw.find("```json" + 7)
+            end = response_raw.find("```", start)
+            # slice the string and strip in case
+            response = response_raw[start:end].strip() 
+        elif "```" in response_raw:
+            start = response_raw.find("```" + 3)
+            end = response_raw.find("```", start)
+            # slice the string and strip in case
+            response = response_raw[start:end].strip() 
+        
+        # Parse json into python dictionary
+        params = json.loads(response)
+
+        return params
 
     def execute_agent(self, query):
         """
@@ -137,19 +154,33 @@ class NSFAgent:
         return params, results
 
 
-# Testing query_nsf_api, should also test the NSF Agent
+# Testing query_nsf_api, also test the NSF Agent
 
 if __name__ == "__main__":
 
     agent = NSFAgent()
+
+    queries = [
+        # Matches example one
+        "Find water research grants in Tennessee at UT Knoxville."
+        # Example two
+        "Find awards in Tennessee at UT Knoxville."
+    ]
+    for query in queries: 
+        params, results = agent.execute_agent(query)
+
+        if results: 
+            total = results['response'].get('totalCount',0)
+            print("Found {total} matching awards".format(total=total))
+
     # Testing function with keyword search
     # Currently using a json formatted string and not a whole file
-    result = query_nsf_api({'keyword' : 'water', 'awardeeStateCode':'TN', 'awardeeName':'university+of+tennessee+knoxville'})
+    # result = query_nsf_api({'keyword' : 'water', 'awardeeStateCode':'TN', 'awardeeName':'university+of+tennessee+knoxville'})
     #result = query_nsf_api({'awardeeStateCode':'TN', 'awardeeName':'university+of+tennessee+knoxville'})
 
-    if result:  # not None (null) 
-        # Access total count data through in the json output
-        total = result['response']['metadata']['totalCount']
-        print("Found {total} awards for 'water'".format(total=total))
-    else:
-        print("Failed, no data.")
+    # if result:  # not None (null) 
+    #     # Access total count data through in the json output
+    #     total = result['response']['metadata']['totalCount']
+    #     print("Found {total} awards for 'water'".format(total=total))
+    # else:
+    #     print("Failed, no data.")
