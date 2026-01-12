@@ -1,4 +1,3 @@
-import anthropic
 import requests
 import json
 from anthropic import Anthropic
@@ -100,7 +99,6 @@ class NSFAgent:
         Returns: 
             Dict params : structured parameters for NSF API or error dict 
         """
-        #client = anthropic.Anthropic()
 
         message = self.client.messages.create(
             model="claude-sonnet-4-5",
@@ -153,6 +151,55 @@ class NSFAgent:
         # return both
         return params, results
 
+    def complete_reply(self, query, api_response):
+        """
+        Human readable summary of search results (RAG)
+        
+        Args: 
+            String query: Original User Query
+            Dictionary api_response: Raw API response
+        
+        Returns: 
+            String: summary
+        """
+        if not api_response: 
+            return "No results found."
+        # Get the count and awards (in a list)
+        total_count = results['response']['metadata'].get('totalCount',0)
+        awards = api_response['response']['metadata'].get('award', [])
+        # Combine
+        summary = {'total_count':total_count, 'awards':[]}
+        
+        # Extract info from top 10
+        for award in awards[:10]:
+            summary['awards'].append({
+                'title': award.get('title', 'N/A'),
+                'institution': award.get('awardeeName', 'N/A'),
+                'amount': award.get('estimatedTotalAmt', 'N/A'),
+                'start_date': award.get('startDate', 'N/A'),
+                'abstract': award.get('abstractText', 'N/A')[:500]}) 
+        
+        summary_prompt = """ The user asked: "{user_query}" 
+        The NSF API Returned {total_count} results. Here are the top results.
+        {json.dumps(summary, indent = 3)} 
+
+        Write a clear, concise summary for a general audience. It should:
+            1. State how many grants were found
+            2. Highlight 2-3 interesting examples with key details
+            3. Note any patterns in funding amounts, institutions, or focus
+            4. Use accessible language (avoid jargon)
+        Keep it under 150 words.
+        """
+
+        message = self.client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1000,
+            system = self.system_prompt,
+            messages=[
+                {"role": "user", "content": query}
+            ]
+        )
+        return message.content[0].text
 
 # Testing query_nsf_api, also test the NSF Agent
 
@@ -163,15 +210,15 @@ if __name__ == "__main__":
     queries = [
         # Matches example one
         "Find water research grants in Tennessee at UT Knoxville."
-        # Example two
-        "Find awards in Tennessee at UT Knoxville."
+        # # Example two
+        # "Find awards in Tennessee at UT Knoxville."
     ]
     for query in queries: 
         params, results = agent.execute_agent(query)
 
-        if results: 
-            total = results['response']['metadata'].get('totalCount',0)
-            print("Found {total} matching awards".format(total=total))
+        # if results: 
+        #     total = results['response']['metadata'].get('totalCount',0)
+        #     print("Found {total} matching awards".format(total=total))
 
     # # Testing function with keyword search
     # # Currently using a json formatted string and not a whole file
