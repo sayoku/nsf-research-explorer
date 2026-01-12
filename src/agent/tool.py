@@ -115,12 +115,12 @@ class NSFAgent:
         response = ""
         # Take the json and find the start and end to the information we want
         if "```json" in response_raw:
-            start = response_raw.find("```json" + 7)
+            start = response_raw.find("```json") + 7
             end = response_raw.find("```", start)
             # slice the string and strip in case
             response = response_raw[start:end].strip() 
         elif "```" in response_raw:
-            start = response_raw.find("```" + 3)
+            start = response_raw.find("```") + 3
             end = response_raw.find("```", start)
             # slice the string and strip in case
             response = response_raw[start:end].strip() 
@@ -170,13 +170,13 @@ if __name__ == "__main__":
         params, results = agent.execute_agent(query)
 
         if results: 
-            total = results['response'].get('totalCount',0)
+            total = results['response']['metadata'].get('totalCount',0)
             print("Found {total} matching awards".format(total=total))
 
-    # Testing function with keyword search
-    # Currently using a json formatted string and not a whole file
+    # # Testing function with keyword search
+    # # Currently using a json formatted string and not a whole file
     # result = query_nsf_api({'keyword' : 'water', 'awardeeStateCode':'TN', 'awardeeName':'university+of+tennessee+knoxville'})
-    #result = query_nsf_api({'awardeeStateCode':'TN', 'awardeeName':'university+of+tennessee+knoxville'})
+    # #result = query_nsf_api({'awardeeStateCode':'TN', 'awardeeName':'university+of+tennessee+knoxville'})
 
     # if result:  # not None (null) 
     #     # Access total count data through in the json output
