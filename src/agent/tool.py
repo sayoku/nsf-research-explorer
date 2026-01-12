@@ -179,7 +179,7 @@ class NSFAgent:
                 'start_date': award.get('startDate', 'N/A'),
                 'abstract': award.get('abstractText', 'N/A')[:500]}) 
         
-        summary_prompt = """ The user asked: "{user_query}" 
+        summary_prompt = f"""The user asked: "{query}" 
         The NSF API Returned {total_count} results. Here are the top results.
         {json.dumps(summary, indent = 3)} 
 
@@ -193,10 +193,10 @@ class NSFAgent:
 
         message = self.client.messages.create(
             model="claude-sonnet-4-5",
-            max_tokens=1000,
+            max_tokens=2000,
             system = self.system_prompt,
             messages=[
-                {"role": "user", "content": query}
+                {"role": "user", "content": summary_prompt}
             ]
         )
         return message.content[0].text
@@ -206,19 +206,18 @@ class NSFAgent:
 if __name__ == "__main__":
 
     agent = NSFAgent()
-
-    queries = [
-        # Matches example one
-        "Find water research grants in Tennessee at UT Knoxville."
+    # Matches example one
+    query = "Find water research grants in Tennessee at UT Knoxville."
         # # Example two
         # "Find awards in Tennessee at UT Knoxville."
-    ]
-    for query in queries: 
-        params, results = agent.execute_agent(query)
-
+    # for query in queries: 
+    #     params, results = agent.execute_agent(query)
         # if results: 
         #     total = results['response']['metadata'].get('totalCount',0)
         #     print("Found {total} matching awards".format(total=total))
+
+    params, results = agent.execute_agent(query)
+    print(agent.complete_reply(query, results))
 
     # # Testing function with keyword search
     # # Currently using a json formatted string and not a whole file
