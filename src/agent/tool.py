@@ -3,6 +3,10 @@ import requests
 import json
 from anthropic import Anthropic
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+api_key = os.getenv("ANTHROPIC_API_KEY")
 
 """
 Tool: Given a structured input, query the NSF API and output the data in a json. 
@@ -96,9 +100,9 @@ class NSFAgent:
         Returns: 
             Dict params : structured parameters for NSF API or error dict 
         """
-        client = anthropic.Anthropic()
+        #client = anthropic.Anthropic()
 
-        message = client.messages.create(
+        message = self.client.messages.create(
             model="claude-sonnet-4-5",
             max_tokens=1000,
             system = self.system_prompt,
@@ -137,6 +141,7 @@ class NSFAgent:
 
 if __name__ == "__main__":
 
+    agent = NSFAgent()
     # Testing function with keyword search
     # Currently using a json formatted string and not a whole file
     result = query_nsf_api({'keyword' : 'water', 'awardeeStateCode':'TN', 'awardeeName':'university+of+tennessee+knoxville'})
