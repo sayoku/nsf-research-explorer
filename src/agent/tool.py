@@ -72,8 +72,8 @@ class NSFAgent:
         awardeeZipCode: 9 digit zip code
         cdfaNumber: catalog of Federal Domestic Assistance Number
         coPDPI: co principal investigator name
-        estimatedTotalAmtFrom: estimated total from amount (values greater than)
-        estimatedTotalAmtTo: estimated total to amount (search for values less than)
+        estimatedTotalAmtFrom: Estimated total from amount. This implies that you are searching for values greater than this amount. Results returned will be for values GREATER than the specified estimated amount (ex. 50000). For a range, you need to specify both the estimatedTotalAmtFrom and estimatedTotalAmtTo parameters
+        estimatedTotalAmtTo: Estimated total to amount. This implies that you are searching for values less than this amount. Results returned will be for values LESS than the specified estimated amount (ex. 500000).
         fundsObligatedAmtFrom: funds obligated from amount - greater than
         fundsObligatedAmtTo: funds obligated less than amount
         pdPIName: Project Director/PI Name, Principal Investigator or Project Director (ex. "SUMNET+STARFIELD")
@@ -165,7 +165,7 @@ class NSFAgent:
         if not api_response: 
             return "No results found."
         # Get the count and awards (in a list)
-        total_count = results['response']['metadata'].get('totalCount',0)
+        total_count = api_response['response']['metadata'].get('totalCount',0)
         awards = api_response['response'].get('award', [])
         # Combine
         summary = {'total_count':total_count, 'awards':[]}
@@ -201,13 +201,45 @@ class NSFAgent:
         )
         return message.content[0].text
 
+def test_agent_accuracy():
+    """
+    Measuring success rate of translating the user's natural language query into json parameters. 
+    """
+    # (query, {expected params})
+    test_cases = [
+        ("Water research in Tennessee", {"keyword": "water", "awardeeStateCode": "TN"}), 
+        ("Grants in Ohio over 50,000", {"awardeeStateCode": "OH", "estimatedTotalAmtFrom": 50000}),
+        ("Environmental research grants in Memphis, TN over 10,000", {"keyword": "environmental", "awardeeCity": "Memphis", "awardeeStateCode": "TN", "estimatedTotalAmtFrom": 10000}),
+        ("Oscilloscope research at The Ohio State University", {"keyword": "oscilloscope", "awardeeName": "ohio+state+university"}),
+        ("Grants performed in Columbus, OH, 43210", {"awardeeCity": "Columbus", "awardeeStateCode": "OH", "awardeeZipCode": "432101016"}),  # 9-digit zip
+        ("Animal science research in Montana", {"keyword": "animal+science", "awardeeStateCode": "MT"}),
+        ("Research on endometriosis in New York, at NYU", {"keyword": "endometriosis", "awardeeStateCode": "NY", "awardeeName": "new+york+university"}),
+        ("Shin splints in long distance runners", {"keyword": "shin+splints"}),
+        ("Grants pertaining to international relations in europe, under 50,000", {"keyword": "international+relations", "estimatedTotalAmtTo": 50000}),
+        ("Cognitive science research at The Ohio State University", {"keyword": "cognitive+science", "awardeeName": "ohio+state+university"})
+    ]
+    agent = NSFAgent()
+    right = 0
+    for query, expected in test_cases: 
+        params = agent.translate_query(query)
+        if all(key in params for key in expected.keys()):
+            right += 1
+            print("Success!")
+            print(query)
+    accuracy = right / len(test_cases) * 100
+
+    print("Accuracy of translate_cases: " + str(accuracy) + "%")
+
+    return accuracy
+
 # Testing query_nsf_api, also test the NSF Agent
 
 if __name__ == "__main__":
 
-    agent = NSFAgent()
+    # agent = NSFAgent()
+    test_agent_accuracy()
     # Matches example one
-    query = "Find water research grants in Tennessee at UT Knoxville."
+    # query = "Find water research grants in Tennessee at UT Knoxville."
         # # Example two
         # "Find awards in Tennessee at UT Knoxville."
     # for query in queries: 
@@ -216,8 +248,8 @@ if __name__ == "__main__":
         #     total = results['response']['metadata'].get('totalCount',0)
         #     print("Found {total} matching awards".format(total=total))
 
-    params, results = agent.execute_agent(query)
-    print(agent.complete_reply(query, results))
+    # params, results = agent.execute_agent(query)
+    # print(agent.complete_reply(query, results))
 
     # # Testing function with keyword search
     # # Currently using a json formatted string and not a whole file
