@@ -120,6 +120,8 @@ The application will open in your browser at `http://localhost:8501`
 
 This project is licensed under the MIT License
 
+This project uses NetworkX, licensed under the BSD 3-Clause License
+
 ## Acknowledgments
 
 - Project concept by Prof. Han-Wei Shen
