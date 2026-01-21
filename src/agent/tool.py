@@ -234,10 +234,10 @@ def test_agent_accuracy():
 
 # Testing query_nsf_api, also test the NSF Agent
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
     # agent = NSFAgent()
-    test_agent_accuracy()
+    # test_agent_accuracy()
     # Matches example one
     # query = "Find water research grants in Tennessee at UT Knoxville."
         # # Example two

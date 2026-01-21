@@ -3,6 +3,8 @@ import networkx as nx
 G = nx.Graph()
 G.add_nodes_from([(4, {"color": "red"}), (5, {"color": "green"})])
 
+# [(4, {"color": "red"}), (5, {"color": "green"})]
+
 H = nx.path_graph(10)
 G.add_nodes_from(H)
 G.add_edges_from([(1, 2), (1, 3)])
