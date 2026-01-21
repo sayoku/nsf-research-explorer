@@ -1,11 +1,52 @@
 import networkx as nx
 from src.agent.tool import NSFAgent, query_nsf_api
+import json
 
-# graph = nx.Graph()
-# pdPIName
-# keyword
-# awardeeName
-# graph.add_nodes_from( )
+class KGBuilder():
+
+    def __init__(self):
+        self.graph = nx.Graph()
+        self.agent = NSFAgent()
+
+    def add_award(self, award):
+        # Extract information from single award 
+        award_id = award.get('id', 'Unknown')
+        pi_name = award.get('pdPIName', 'Unknown PI')
+        institution = award.get('awardeeName', 'Unknown Institution')
+        program = award.get('fundProgramName', 'Unknown Program')
+        amount = award.get('estimatedTotalAmt', 0)
+        start_date = award.get('startDate', 'N/A')
+        abstract = award.get('abstractText', '')
+
+        # Add award node
+        self.graph.add_node(
+            f"Award_{award_id}",
+            type = 'Award',
+            id = award_id,
+            program = program,
+            amount = amount,
+            start_date = start_date,
+            abstract = abstract[:200]
+        )
+        # Add PI Node
+        if not self.graph.has_node(pi_name):
+            self.graph.add_node(
+                pi_name,
+                type = 'PI',
+                name = pi_name
+            )
+        # Add institution node 
+        if not self.graph.has_node(institution):
+            self.graph.add_node(
+                institution,
+                type='Institution',
+                name=institution
+            )
+
+        # Add edges (relationships)
+        self.graph.add_edge(pi_name, f"Award_{award_id}", relationship='investigates')
+        self.graph.add_edge(institution, f"Award_{award_id}", relationship='hosts')
+        self.graph.add_edge(pi_name, institution, relationship='affiliated_with')
 
 if __name__ == "__main__":
     agent = NSFAgent()
