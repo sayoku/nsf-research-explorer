@@ -33,7 +33,12 @@ This project builds a three-component system:
 nsf-research-explorer/
 ├── src/
 │   ├── agent/
+│   │  ├── tool.py
+│   │  ├── .env
+│   │  └── __init__.py
 │   ├── knowledge_graph/
+│   │  ├── mem.py
+│   │  └── __init__.py
 │   └── visualization/
 ├── data/               
 ├── tests/
