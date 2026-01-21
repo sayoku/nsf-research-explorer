@@ -9,14 +9,14 @@ class KGBuilder():
         self.agent = NSFAgent()
 
     def add_award(self, award):
-        # Extract information from single award 
-        award_id = award.get('id', 'Unknown')
-        pi_name = award.get('pdPIName', 'Unknown PI')
-        institution = award.get('awardeeName', 'Unknown Institution')
-        program = award.get('fundProgramName', 'Unknown Program')
-        amount = award.get('estimatedTotalAmt', 0)
-        start_date = award.get('startDate', 'N/A')
-        abstract = award.get('abstractText', '')
+        # Extract information from single award and save to identifiers
+        award_id = award['response'].get('id', 'Unknown')
+        pi_name = award['response'].get('pdPIName', 'Unknown PI')
+        institution = award['response'].get('awardeeName', 'Unknown Institution')
+        program = award['response'].get('fundProgramName', 'Unknown Program')
+        amount = award['response'].get('estimatedTotalAmt', 0)
+        start_date = award['response'].get('startDate', 'N/A')
+        abstract = award['response'].get('abstractText', '')
 
         # Add award node
         self.graph.add_node(
