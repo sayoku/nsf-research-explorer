@@ -84,6 +84,18 @@ class KGBuilder():
         keywords = [w for w in words if len(w) > 5 and w not in common]
         # return the first 10 keywords, making sure they're not duplicates, and convert back to list
         return list(set(keywords[:10]))
+    
+    # TODO: load from query - method to query NSF API and load results into graph
+
+    # TODO: other helpful methods: 
+
+    # TODO: get PI awards - get all awards of a specific PI
+
+    # TODO: get Institution PIs - get all PIs of a specific insitution
+
+    # TODO: find similar PIs - list of PIs in similar topics or at the same insitution
+
+    # TODO: get graph stats + print the summary 
 
 if __name__ == "__main__":
     agent = NSFAgent()
