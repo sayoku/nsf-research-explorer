@@ -90,15 +90,11 @@ class KGBuilder():
     
     # TODO: load from query - method to query NSF API and load results into graph
 
-    # TODO: other helpful methods: 
-
     # TODO: get PI awards - get all awards of a specific PI
 
     # TODO: get Institution PIs - get all PIs of a specific insitution
 
     # TODO: find similar PIs - list of PIs in similar topics or at the same insitution
-
-    # TODO: get graph stats + print the summary 
 
     def get_graph_info(self):
         """
@@ -124,7 +120,6 @@ class KGBuilder():
         # Return dictionary of node_types
         return node_types
 
-
 if __name__ == "__main__":
     agent = NSFAgent()
     query = "Find water research grants in Tennessee at UT Knoxville."
@@ -136,3 +131,5 @@ if __name__ == "__main__":
 
     # This will output the summary 
     # print(agent.complete_reply(query, results))
+
+    # TODO: test everything!
