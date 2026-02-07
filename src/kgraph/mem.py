@@ -3,12 +3,22 @@ from src.agent.tool import NSFAgent, query_nsf_api
 import json
 
 class KGBuilder():
+    """
+    Knowledge graph builder for NSF Awards using NetworkX.
+    Transforms data into a connected graph of PIs, Institutions, and Awards.
+    """
 
     def __init__(self):
         self.graph = nx.Graph()
         self.agent = NSFAgent()
 
     def add_award(self, award):
+        """
+        Add a single award and its relationships to the graph.
+
+        Args: 
+            Dictionary award : award data from the NSF API's response. 
+        """
         # Extract information from single award and save to identifiers
         award_id = award['response'].get('id', 'Unknown')
         pi_name = award['response'].get('pdPIName', 'Unknown PI')
@@ -18,7 +28,7 @@ class KGBuilder():
         start_date = award['response'].get('startDate', 'N/A')
         abstract = award['response'].get('abstractText', '')
 
-        # Add award node
+        # Add award node - and award details
         self.graph.add_node(
             f"Award_{award_id}",
             type = 'Award',
@@ -47,6 +57,33 @@ class KGBuilder():
         self.graph.add_edge(pi_name, f"Award_{award_id}", relationship='investigates')
         self.graph.add_edge(institution, f"Award_{award_id}", relationship='hosts')
         self.graph.add_edge(pi_name, institution, relationship='affiliated_with')
+
+        # Extract topic and keywords using extract_keywords
+
+        keywords = self.extract_keywords(self, abstract)
+        # Further limiting amount of keywords used
+        for key in keywords[:5]:
+            topicword = f"Topic_{key}"
+            if not self.graph.has_note(topicword):
+                self.graph.add_node(topicword)
+        self.graph.add_edge(topicword, f"Award_{award_id}", relationship = 'focuses on')
+
+
+    def extract_keywords(self, text): 
+        """
+        Extracting keywords from text (in this case, the abstract)
+
+        Args: 
+            String text : text to extract keywords from
+        Returns: 
+            List keywords : a list of keywords
+        """
+        # There probably is a better way to do this, still thinking on it. 
+        common = ["research", "study", "investigation", "development", "analysis"]
+        words = text.lower().split() 
+        keywords = [w for w in words if len(w) > 5 and w not in common]
+        # return the first 10 keywords, making sure they're not duplicates, and convert back to list
+        return list(set(keywords[:10]))
 
 if __name__ == "__main__":
     agent = NSFAgent()
