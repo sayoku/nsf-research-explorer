@@ -65,7 +65,10 @@ class KGBuilder():
         for key in keywords[:5]:
             topicword = f"Topic_{key}"
             if not self.graph.has_note(topicword):
-                self.graph.add_node(topicword)
+                self.graph.add_node(
+                    topicword,
+                    type = 'Topic'
+                )
         self.graph.add_edge(topicword, f"Award_{award_id}", relationship = 'focuses on')
 
 
@@ -96,6 +99,31 @@ class KGBuilder():
     # TODO: find similar PIs - list of PIs in similar topics or at the same insitution
 
     # TODO: get graph stats + print the summary 
+
+    def get_graph_info(self):
+        """
+        Get statistics and information about the graph, and printing the results.
+        """
+        # Dictionary of values for the node attribute 'type'
+        type_attributes = nx.get_node_atributes(self.graph, 'type')
+        
+        # Dictionary of node types and how many occurences
+        node_types = {}
+        for type_val in type_attributes.values(): 
+            # Get values and add one if found
+            node_types[type_val] = type_val.get(type_val, 0) + 1
+
+        # Print the summary 
+        print(f"Total Nodes: {nx.number_of_nodes(self.graph)}")
+        print(f"Total Edges: {nx.number_of_edges(self.graph)}")
+        print(f"Graph Density: {nx.density(self.graph)}")
+        print(f"Node types: ")
+        for type, count in node_types.items():
+            print(f"   {type}: {count}")
+
+        # Return dictionary of node_types
+        return node_types
+
 
 if __name__ == "__main__":
     agent = NSFAgent()
