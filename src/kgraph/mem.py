@@ -90,9 +90,30 @@ class KGBuilder():
     
     # TODO: load from query - method to query NSF API and load results into graph
 
-    # TODO: get PI awards - get all awards of a specific PI
+    def get_pi_awards(self, pi_name): 
+        """
+        Get all awards of a PI 
+        """
+        if pi_name not in self.graph:
+            return []
+        
+        # Get the neighbors of the PI node which start with "Award_"
+        return [n for n in nx.neighbors(self.graph, pi_name)
+            if n.startswith('Award_')]
 
-    # TODO: get Institution PIs - get all PIs of a specific insitution
+    def get_institution_pis(self, institution_name): 
+        """
+        Get all PIs at an insitution 
+        """
+        if institution_name not in self.graph:
+            return []
+        
+        # Get node types
+        node_types = nx.get_node_attributes(self.graph, 'type')
+        
+        # Get the neighbors
+        return [n for n in nx.neighbors(self.graph, institution_name)
+            if node_types.get(n) == 'PI']
 
     # TODO: find similar PIs - list of PIs in similar topics or at the same insitution
 
