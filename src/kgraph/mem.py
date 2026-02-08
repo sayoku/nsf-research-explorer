@@ -87,8 +87,30 @@ class KGBuilder():
         keywords = [w for w in words if len(w) > 5 and w not in common]
         # return the first 10 keywords, making sure they're not duplicates, and convert back to list
         return list(set(keywords[:10]))
-    
-    # TODO: load from query - method to query NSF API and load results into graph
+
+    def load_query_results(self, query, max_awards = 100): 
+        """
+        Query the NSF API and load the responses into the knowledge graph.
+
+        Args: 
+            String query: The natural language query
+            Int max_awards: the maximum number of awards to load (default 100)
+        """
+        # Query the NSF API, use the tool
+        params, results = self.agent.execute_agent(query)
+
+        if not results:
+            print("No results found.")
+            return
+        
+        awards = results['response'].get('award',[])
+        # add each award to the graph, so that it's under the max awards
+        for award in awards[:max_awards]:
+            self.add_award(award)
+
+        number_loaded = min(len(awards), max_awards)
+        print(f"Loaded {number_loaded} awards into the knowledge graph.")
+        print(f"The graph has {self.graph.number_of_nodes()} nodes and {self.graph.number_of_edges()} edges.")
 
     def get_pi_awards(self, pi_name): 
         """
@@ -114,8 +136,6 @@ class KGBuilder():
         # Get the neighbors
         return [n for n in nx.neighbors(self.graph, institution_name)
             if node_types.get(n) == 'PI']
-
-    # TODO: find similar PIs - list of PIs in similar topics or at the same insitution
 
     def get_graph_info(self):
         """
