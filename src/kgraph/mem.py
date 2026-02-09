@@ -162,15 +162,26 @@ class KGBuilder():
         return node_types
 
 if __name__ == "__main__":
-    agent = NSFAgent()
-    query = "Find water research grants in Tennessee at UT Knoxville."
-    params, results = agent.execute_agent(query)
-    if results: 
-        # Example of working with results data 
-        total = results['response']['metadata'].get('totalCount',0)
-        print("Found {total} matching awards".format(total=total))
 
-    # This will output the summary 
-    # print(agent.complete_reply(query, results))
+    # Create kg 
+    kg = KGBuilder()
 
-    # TODO: test everything!
+    # Load data 
+    kg.load_from_query("Water research grants in Tennessee at UT Knoxville.", max_awards = 10)
+
+    # Display graph info
+    kg.get_graph_info()
+
+    # Get all PI's from the graph
+    node_types = nx.get_node_attributes(kg.graph, 'type')
+    pis = [node for node, node_type in node_types.items() if node_types == 'PI']
+
+    # Take a PI and get (and print) the first three of their awards.
+    if pis:
+        ex_pi = pis[0]
+        print(f"Awards for {ex_pi} \n")
+        awards = kg.get_pi_awards
+        for award in awards[:3]:
+            print(f"   {award}")
+
+# TODO : test the methods and functionality
