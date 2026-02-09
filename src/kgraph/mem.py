@@ -108,7 +108,9 @@ class KGBuilder():
         for award in awards[:max_awards]:
             self.add_award(award)
 
+        # Get the number of awards you loaded, either max awards or the length - whichever is lower. 
         number_loaded = min(len(awards), max_awards)
+        # Print number of awards loaded and then the updated number of nodes and edges.
         print(f"Loaded {number_loaded} awards into the knowledge graph.")
         print(f"The graph has {self.graph.number_of_nodes()} nodes and {self.graph.number_of_edges()} edges.")
 
@@ -116,6 +118,7 @@ class KGBuilder():
         """
         Get all awards of a PI 
         """
+        # in case there is are no pi's
         if pi_name not in self.graph:
             return []
         
@@ -127,13 +130,14 @@ class KGBuilder():
         """
         Get all PIs at an insitution 
         """
+        # in case there are no institution names
         if institution_name not in self.graph:
             return []
         
-        # Get node types
+        # Get node types (get attribute of type)
         node_types = nx.get_node_attributes(self.graph, 'type')
         
-        # Get the neighbors
+        # Get the neighbors for the institution name, neighbors of type PI
         return [n for n in nx.neighbors(self.graph, institution_name)
             if node_types.get(n) == 'PI']
 
