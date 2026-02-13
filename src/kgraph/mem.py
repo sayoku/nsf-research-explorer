@@ -67,17 +67,16 @@ class KGBuilder():
 
         # Extract topic and keywords using extract_keywords
 
-        keywords = self.extract_keywords(self, abstract)
+        keywords = self.extract_keywords(abstract)
         # Further limiting amount of keywords used
         for key in keywords[:5]:
             topicword = f"Topic_{key}"
-            if not self.graph.has_note(topicword):
+            if not self.graph.has_node(topicword):
                 self.graph.add_node(
                     topicword,
                     type = 'Topic'
                 )
-        self.graph.add_edge(topicword, f"Award_{award_id}", relationship = 'focuses on')
-
+        self.graph.add_edge(f"Award_{award_id}", topicword, relationship = 'focuses on')
 
     def extract_keywords(self, text): 
         """
@@ -110,7 +109,7 @@ class KGBuilder():
             print("No results found.")
             return
         
-        awards = results.get('award',[])
+        awards = results['response'].get('award',[]) # Needing the response key
         # add each award to the graph, so that it's under the max awards
         for award in awards[:max_awards]:
             self.add_award(award)
@@ -159,7 +158,7 @@ class KGBuilder():
         node_types = {}
         for type_val in type_attributes.values(): 
             # Get values and add one if found
-            node_types[type_val] = type_val.get(type_val, 0) + 1
+            node_types[type_val] = node_types.get(type_val, 0) + 1
 
         # Print the summary 
         print(f"Total Nodes: {nx.number_of_nodes(self.graph)}")
@@ -185,13 +184,13 @@ if __name__ == "__main__":
 
     # Get all PI's from the graph
     node_types = nx.get_node_attributes(kg.graph, 'type')
-    pis = [node for node, node_type in node_types.items() if node_types == 'PI']
+    pis = [node for node, node_type in node_types.items() if node_type == 'PI']
 
     # Take a PI and get (and print) the first three of their awards.
     if pis:
         ex_pi = pis[0]
         print(f"Awards for {ex_pi} \n")
-        awards = kg.get_pi_awards
+        awards = kg.get_pi_awards(ex_pi)
         for award in awards[:3]:
             print(f"   {award}")
 
