@@ -167,6 +167,7 @@ class KGBuilder():
         print(f"Node types: ")
         for type, count in node_types.items():
             print(f"   {type}: {count}")
+        print()
 
         # Return dictionary of node_types
         return node_types
@@ -177,7 +178,7 @@ if __name__ == "__main__":
     kg = KGBuilder()
 
     # Load data 
-    kg.load_query_results("Water research grants in Tennessee at UT Knoxville.", max_awards = 10)
+    kg.load_query_results("Environmental research grants in Memphis, TN over 10,000", max_awards = 10)
 
     # Display graph info
     kg.get_graph_info()
@@ -189,7 +190,7 @@ if __name__ == "__main__":
     # Take a PI and get (and print) the first three of their awards.
     if pis:
         ex_pi = pis[0]
-        print(f"Awards for {ex_pi} \n")
+        print(f"Awards for {ex_pi}")
         awards = kg.get_pi_awards(ex_pi)
         for award in awards[:3]:
             print(f"   {award}")
