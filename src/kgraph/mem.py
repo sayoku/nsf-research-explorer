@@ -27,13 +27,13 @@ class KGBuilder():
             Dictionary award : award data from the NSF API's response. 
         """
         # Extract information from single award and save to identifiers
-        award_id = award['response'].get('id', 'Unknown')
-        pi_name = award['response'].get('pdPIName', 'Unknown PI')
-        institution = award['response'].get('awardeeName', 'Unknown Institution')
-        program = award['response'].get('fundProgramName', 'Unknown Program')
-        amount = award['response'].get('estimatedTotalAmt', 0)
-        start_date = award['response'].get('startDate', 'N/A')
-        abstract = award['response'].get('abstractText', '')
+        award_id = award.get('id', 'Unknown')
+        pi_name = award.get('pdPIName', 'Unknown PI')
+        institution = award.get('awardeeName', 'Unknown Institution')
+        program = award.get('fundProgramName', 'Unknown Program')
+        amount = award.get('estimatedTotalAmt', 0)
+        start_date = award.get('startDate', 'N/A')
+        abstract = award.get('abstractText', '')
 
         # Add award node - and award details
         self.graph.add_node(
@@ -110,7 +110,7 @@ class KGBuilder():
             print("No results found.")
             return
         
-        awards = results['response'].get('award',[])
+        awards = results.get('award',[])
         # add each award to the graph, so that it's under the max awards
         for award in awards[:max_awards]:
             self.add_award(award)
@@ -153,7 +153,7 @@ class KGBuilder():
         Get statistics and information about the graph, and printing the results.
         """
         # Dictionary of values for the node attribute 'type'
-        type_attributes = nx.get_node_atributes(self.graph, 'type')
+        type_attributes = nx.get_node_attributes(self.graph, 'type')
         
         # Dictionary of node types and how many occurences
         node_types = {}
