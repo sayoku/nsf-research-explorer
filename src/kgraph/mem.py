@@ -1,13 +1,12 @@
 import networkx as nx
 import os
-import json
 import sys
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.dirname(current_dir)
 sys.path.insert(0, src_dir)
 
-from agent.tool import NSFAgent, query_nsf_api
+from agent.tool import NSFAgent
 
 class KGBuilder():
     """
