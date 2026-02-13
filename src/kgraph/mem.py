@@ -186,12 +186,14 @@ if __name__ == "__main__":
     node_types = nx.get_node_attributes(kg.graph, 'type')
     pis = [node for node, node_type in node_types.items() if node_type == 'PI']
 
-    # Take a PI and get (and print) the first three of their awards.
+    # Take 3 PI's and get (and print) the first three of their awards.
     if pis:
-        ex_pi = pis[0]
-        print(f"Awards for {ex_pi}")
-        awards = kg.get_pi_awards(ex_pi)
-        for award in awards[:3]:
-            print(f"   {award}")
+        ex_pis = pis[:3]
+        for pi in ex_pis: 
+            print(f"Awards for {pi}")
+            awards = kg.get_pi_awards(pi)
+            for award in awards[:3]:
+                print(f"   {award}")
+            print()
 
         
