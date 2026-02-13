@@ -1,6 +1,13 @@
 import networkx as nx
-from src.agent.tool import NSFAgent, query_nsf_api
+import os
 import json
+import sys
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(current_dir)
+sys.path.insert(0, src_dir)
+
+from agent.tool import NSFAgent, query_nsf_api
 
 class KGBuilder():
     """
@@ -171,7 +178,7 @@ if __name__ == "__main__":
     kg = KGBuilder()
 
     # Load data 
-    kg.load_from_query("Water research grants in Tennessee at UT Knoxville.", max_awards = 10)
+    kg.load_query_results("Water research grants in Tennessee at UT Knoxville.", max_awards = 10)
 
     # Display graph info
     kg.get_graph_info()
@@ -188,4 +195,4 @@ if __name__ == "__main__":
         for award in awards[:3]:
             print(f"   {award}")
 
-# TODO : test the methods and functionality
+        
