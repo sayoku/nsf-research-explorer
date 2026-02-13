@@ -177,7 +177,8 @@ if __name__ == "__main__":
     kg = KGBuilder()
 
     # Load data 
-    kg.load_query_results("Environmental research grants in Memphis, TN over 10,000", max_awards = 10)
+    kg.load_query_results("Environmental research grants in Memphis, TN over 10,000", max_awards = 15)
+    kg.load_query_results("Cognitive science research at The Ohio State University", max_awards = 15)
 
     # Display graph info
     kg.get_graph_info()
