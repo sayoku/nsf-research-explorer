@@ -168,6 +168,13 @@ if st.session_state.loaded == True:
     with tab4:
         st.header("Knowledge graph visualization")
 
+        st.markdown(
+            """ 
+            Coming soon! 
+
+            """
+        )        
+
 else:
     st.info("Enter a query in the sidebar to get started")
 
