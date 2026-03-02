@@ -18,7 +18,7 @@ st.set_page_config(page_title="NSF Research Explorer", layout="wide")
 st.title("NSF Research Award Explorer")
 st.markdown(
     """ 
-    **Explore :rainbow[NSF grants] NSF grants using natural language queries and visualize the knowledge graph** 
+    **Explore :rainbow[NSF grants] using natural language queries and knowledge graph visualization** 
 
     """
 )
@@ -63,6 +63,9 @@ with st.sidebar:
                 st.success(f"Loaded {max_awards} awards!")
         else:
             st.warning("Please enter a search query")
+
+    if st.button("Send snow!"):
+        st.snow()
 
 # Main content
 if st.session_state.loaded == True:
