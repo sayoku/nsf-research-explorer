@@ -1,5 +1,5 @@
 import streamlit as st
-#import networkx as nx
+import networkx as nx
 import matplotlib.pyplot as plt
 import sys
 import os
@@ -72,6 +72,17 @@ if st.session_state.loaded == True:
     # tab1
     with tab1:
         st.header("Knowledge graph overview and summary")
+        # Get stats and organize them into columns
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric("Total Nodes", nx.number_of_nodes(st.session_state.kg.graph))
+        with col2:
+            st.metric("Total Edges", nx.number_of_edges(st.session_state.kg.graph))
+        with col3:
+            density = nx.density(st.session_state.kg.graph)
+            # show as 4-decimal float 
+            st.metric("Graph Density", f"{density:.4f}")
 
     # tab2
     with tab2:
