@@ -131,6 +131,39 @@ if st.session_state.loaded == True:
     with tab3:
         st.header("Institutions")
 
+        node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
+        institutions = [node for node, node_type in node_types.items() if node_type == 'Institution']
+
+        # If there are insitutions, 
+        if institutions:
+            selected_inst = st.selectbox("Select an Institution:", institutions)
+
+
+            if selected_inst:
+                st.subheader(f"PI's at {selected_inst}")
+                # Pull institution PIs from KG Builder
+                inst_pis = st.session_state.kg.get_institution_pis(selected_inst)
+
+                if inst_pis:
+                    st.write(f"**Total PIs:** {len(inst_pis)}")
+                    
+                    for pi in inst_pis:
+                        # Use get_pi_awards to get award count for each PI
+                        pi_awards = st.session_state.kg.get_pi_awards(pi)
+                        
+                        with st.expander(f"👤 {pi} ({len(pi_awards)} award(s))"):
+                            if pi_awards:
+                                for award in pi_awards:
+                                    award_data = st.session_state.kg.graph.nodes[award]
+                                    st.write(f"**{award}**")
+                                    st.write(f"  - Amount: {award_data.get('amount', 0)}")
+                                    st.write(f"  - Program: {award_data.get('program', 'N/A')}")
+                                    st.divider()
+                            else:
+                                st.write("No award details available")
+                else:
+                    st.info("No institutions found in the current graph")
+
     # tab4
     with tab4:
         st.header("Knowledge graph visualization")

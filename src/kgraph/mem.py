@@ -42,7 +42,7 @@ class KGBuilder():
             program = program,
             amount = amount,
             start_date = start_date,
-            abstract = abstract[:200]
+            abstract = abstract
         )
         # Add PI Node
         if not self.graph.has_node(pi_name):
