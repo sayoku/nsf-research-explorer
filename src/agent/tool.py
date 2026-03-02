@@ -4,8 +4,19 @@ from anthropic import Anthropic
 import os
 from dotenv import load_dotenv
 
+# Load environment variables from .env file (for local development)
 load_dotenv()
+
+# Try to get API key from environment variable first
 api_key = os.getenv("ANTHROPIC_API_KEY")
+
+# If running on Streamlit Cloud, check streamlit secrets
+if not api_key:
+    try:
+        import streamlit as st
+        api_key = st.secrets.get("ANTHROPIC_API_KEY")
+    except:
+        pass
 
 """
 Tool: Given a structured input, query the NSF API and output the data in a json. 
