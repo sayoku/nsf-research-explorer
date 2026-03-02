@@ -52,3 +52,13 @@ with st.sidebar:
         value=10,
         step=5
     )
+
+    if st.button("Search", type="primary"):
+        if query:
+            with st.spinner("Searching NSF database..."):
+                st.session_state.kg = KGBuilder()  # Resetting
+                st.session_state.kg.load_query_results(query, max_awards=max_awards)
+                st.session_state.loaded = True
+                st.success(f"Loaded {max_awards} awards!")
+        else:
+            st.warning("Please enter a search query")
