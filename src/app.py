@@ -87,6 +87,18 @@ if st.session_state.loaded == True:
             # show as 4-decimal float 
             st.metric("Graph Density", f"{density:.4f}")
 
+        st.subheader("Node type breakdown")
+        # Get node attributes from the graph 
+        node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
+        type_counts = {}
+        # For each value in node_types, add to type counts if present
+        for node_type in node_types.values():
+            type_counts[node_type] = type_counts.get(node_type, 0) + 1
+        # Show as bar chart
+
+        # Ew we gotta change the orientation/presentation later...
+        st.bar_chart(type_counts)
+
     # tab2
     with tab2:
         st.header("Principal Investigators")
