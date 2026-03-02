@@ -103,6 +103,30 @@ if st.session_state.loaded == True:
     with tab2:
         st.header("Principal Investigators")
 
+        # Get all PI's from the graph
+        node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
+        pis = [node for node, node_type in node_types.items() if node_type == 'PI']
+
+        # If there are PI's, 
+        if pis:
+            selected_pi = st.selectbox("Select a PI:", pis)
+
+
+            if selected_pi:
+                st.subheader(f"Awards for {selected_pi}")
+                awards = st.session_state.kg.get_pi_awards(selected_pi)
+
+                if awards:
+                    st.write(f"**Total Awards:** {len(awards)}")
+                    for award in awards:
+                        with st.expander(f"{award}"):
+                            award_data = st.session_state.kg.graph.nodes[award]
+                            st.write(f"**Program:** {award_data.get('program', 'N/A')}")
+                            st.write(f"**Amount:** {award_data.get('amount', 0)}")
+                            st.write(f"**Start Date:** {award_data.get('start_date', 'N/A')}")
+                            st.write(f"**Abstract:** {award_data.get('abstract', 'N/A')}")
+                else:
+                    st.info("No awards found for this PI")
     # tab3
     with tab3:
         st.header("Institutions")
