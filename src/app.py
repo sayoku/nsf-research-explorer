@@ -52,7 +52,8 @@ with st.sidebar:
         value=10,
         step=5
     )
-
+    
+    #Search button, which queries the NSF API using KGBuilder
     if st.button("Search", type="primary"):
         if query:
             with st.spinner("Searching NSF database..."):
@@ -62,3 +63,40 @@ with st.sidebar:
                 st.success(f"Loaded {max_awards} awards!")
         else:
             st.warning("Please enter a search query")
+
+# Main content
+if st.session_state.loaded == True:
+    # Tabs for different info
+    tab1, tab2, tab3, tab4 = st.tabs(["Summary", "PIs", "Institutions", "Knowledge Graph"])
+
+    # tab1
+    with tab1:
+        st.header("Knowledge graph overview and summary")
+
+    # tab2
+    with tab2:
+        st.header("Principal Investigators")
+
+    # tab3
+    with tab3:
+        st.header("Institutions")
+
+    # tab4
+    with tab4:
+        st.header("Knowledge graph visualization")
+
+else:
+    st.info("Enter a query in the sidebar to get started")
+
+    # Example queries for funsies
+    st.subheader("Example Queries:")
+    examples = [
+        "Water research in Tennessee",
+        "Cognitive science at Ohio State University",
+        "Grants over $100,000 in California",
+        "Environmental research in New York",
+        "Machine learning research"
+    ]
+    
+    for example in examples:
+        st.code(example)
