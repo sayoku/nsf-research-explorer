@@ -3,3 +3,8 @@ charset-normalizer==3.4.4
 idna==3.11
 requests==2.32.5
 urllib3==2.6.2
+anthropic
+python-dotenv
+networkx
+matplotlib
+streamlit
