@@ -234,22 +234,22 @@ def test_agent_accuracy():
 
 # Testing query_nsf_api, also test the NSF Agent
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
 
-    # agent = NSFAgent()
-    # test_agent_accuracy()
+    agent = NSFAgent()
+    test_agent_accuracy()
     # Matches example one
-    # query = "Find water research grants in Tennessee at UT Knoxville."
+    query = "Find water research grants in Tennessee at UT Knoxville."
         # # Example two
         # "Find awards in Tennessee at UT Knoxville."
-    # for query in queries: 
-    #     params, results = agent.execute_agent(query)
-        # if results: 
-        #     total = results['response']['metadata'].get('totalCount',0)
-        #     print("Found {total} matching awards".format(total=total))
+    for query in queries: 
+        params, results = agent.execute_agent(query)
+        if results: 
+            total = results['response']['metadata'].get('totalCount',0)
+            print("Found {total} matching awards".format(total=total))
 
-    # params, results = agent.execute_agent(query)
-    # print(agent.complete_reply(query, results))
+    params, results = agent.execute_agent(query)
+    print(agent.complete_reply(query, results))
 
     # # Testing function with keyword search
     # # Currently using a json formatted string and not a whole file
