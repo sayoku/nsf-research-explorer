@@ -1,15 +1,24 @@
 import streamlit as st
+#import networkx as nx
+import matplotlib.pyplot as plt
+import sys
+import os
 
-st.title("Hello Streamlit-er 👋")
+# Add src to path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
+
+from agent.tool import NSFAgent
+from kgraph.mem import KGBuilder
+
+st.set_page_config(page_title="NSF Research Explorer", layout="wide")
+
+st.title("NSF Research Award Explorer")
 st.markdown(
     """ 
-    This is a playground for you to try Streamlit and have fun. 
+    Explore NSF grants using natural language queries and visualize the knowledge graph 
 
-    **There's :rainbow[so much] you can build!**
-    
-    We prepared a few examples for you to get started. Just 
-    click on the buttons above and discover what you can do 
-    with Streamlit. 
+    **There's :rainbow[so much] you can find!**
     """
 )
 
