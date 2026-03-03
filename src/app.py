@@ -170,10 +170,67 @@ if st.session_state.loaded == True:
 
         st.markdown(
             """ 
-            Coming soon! 
+            A work in progress: currently using NetworkX and Matpotlib.pyplot
 
             """
         )        
+
+        # Visualization options
+        layout_type = st.selectbox(
+            "Select layout:",
+            ["Spring", "Circular", "Kamada-Kawai"]
+        )
+        
+        node_size = st.slider("Node size:", 100, 1000, 300)
+        
+        if st.button("Generate Visualization"):
+            with st.spinner("Generating graph visualization..."):
+                fig, ax = plt.subplots(figsize=(14, 10))
+                
+                # Choose layout and use according networkX layout
+                if layout_type == "Spring":
+                    pos = nx.spring_layout(st.session_state.kg.graph)
+                elif layout_type == "Circular":
+                    pos = nx.circular_layout(st.session_state.kg.graph)
+                else:
+                    pos = nx.kamada_kawai_layout(st.session_state.kg.graph)
+                
+                # Color nodes by type
+                node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
+                color_map = {
+                    'PI': '#CF9FFF',
+                    'Institution': '#4ECDC4',
+                    'Award': '#6495ED',
+                    'Topic': '#E37383'
+                }
+                # Loop through each node in the graph, and grab it's type, if not found, return ''. 
+                # Get the color for the type, default is the teal color.
+                node_colors = [color_map.get(node_types.get(node, ''), '#95E1D3') 
+                             for node in st.session_state.kg.graph.nodes()]
+                
+                # Draw graph
+                nx.draw(
+                    st.session_state.kg.graph,
+                    pos,
+                    node_color=node_colors,
+                    node_size=node_size,
+                    with_labels=True,
+                    font_size=6,
+                    font_weight='bold',
+                    ax=ax,
+                    edge_color='#CCCCCC',
+                    alpha=0.7
+                )
+                
+                # Legend
+                legend_elements = [
+                    plt.Line2D([0], [0], marker='o', color='w', 
+                             markerfacecolor=color, markersize=10, label=node_type)
+                    for node_type, color in color_map.items()
+                ]
+                ax.legend(handles=legend_elements, loc='lower right')
+                
+                st.pyplot(fig)
 
 else:
     st.info("Enter a query in the sidebar to get started")
