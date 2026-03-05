@@ -1,12 +1,13 @@
 import networkx as nx
 import os
 import sys
+import json 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.dirname(current_dir)
 sys.path.insert(0, src_dir)
 
-from agent.tool import NSFAgent
+from agent.tool import NSFAgent, query_nsf_api
 
 class KGBuilder():
     """
@@ -17,6 +18,34 @@ class KGBuilder():
     def __init__(self):
         self.graph = nx.Graph()
         self.agent = NSFAgent()
+
+        # Deduplication sets 
+        self.pi_names = set()
+        self.institution_names = set()
+        self.award_ids = set()
+
+    def normalize_name(self, name):
+        """
+        Normalize names for deduplication
+
+        Args:
+            String name : name from API
+
+        Returns:
+            String normalized name
+        """
+
+        if not name or name == "Unknown PI" or name == "Unknown Institution":
+            return name
+        
+        # Convert lowercase, strip whitespace, replace + with space 
+        normalized = name.lower().strip().replace('+', ' ')
+        # Remove extra whitespace in the middle of string if any
+        normalized = ' '.join(normalized.strip())
+        # Title case 
+        normalized = normalized.title()
+
+        return normalized
 
     def add_award(self, award):
         """
