@@ -41,7 +41,7 @@ class KGBuilder():
         # Convert lowercase, strip whitespace, replace + with space 
         normalized = name.lower().strip().replace('+', ' ')
         # Remove extra whitespace in the middle of string if any
-        normalized = ' '.join(normalized.strip())
+        normalized = ' '.join(normalized.split())
         # Title case 
         normalized = normalized.title()
 
@@ -56,12 +56,21 @@ class KGBuilder():
         """
         # Extract information from single award and save to identifiers
         award_id = award.get('id', 'Unknown')
-        pi_name = award.get('pdPIName', 'Unknown PI')
-        institution = award.get('awardeeName', 'Unknown Institution')
+        raw_pi_name = award.get('pdPIName', 'Unknown PI')
+        raw_institution = award.get('awardeeName', 'Unknown Institution')
         program = award.get('fundProgramName', 'Unknown Program')
         amount = award.get('estimatedTotalAmt', 0)
         start_date = award.get('startDate', 'N/A')
         abstract = award.get('abstractText', '')
+
+        # Normalize names 
+        pi_name = self.normalize_name(raw_pi_name)
+        institution = self.normalize_name(raw_institution)
+
+        # Skip if award already exists
+        if award_id in self.award_ids:
+            return
+        self.award_ids.add(award_id)
 
         # Add award node - and award details
         self.graph.add_node(
@@ -74,19 +83,14 @@ class KGBuilder():
             abstract = abstract
         )
         # Add PI Node
-        if not self.graph.has_node(pi_name):
-            self.graph.add_node(
-                pi_name,
-                type = 'PI',
-                name = pi_name
-            )
-        # Add institution node 
-        if not self.graph.has_node(institution):
-            self.graph.add_node(
-                institution,
-                type='Institution',
-                name=institution
-            )
+        if pi_name not in self.pi_names:
+            self.pi_names.add(pi_name)
+            self.graph.add_node(pi_name, type='PI', name=pi_name)
+
+        # Add Institution node
+        if institution not in self.institution_names:  
+            self.institution_names.add(institution)
+            self.graph.add_node(institution, type='Institution', name=institution)
 
         # Add edges (relationships)
         self.graph.add_edge(pi_name, f"Award_{award_id}", relationship='investigates')
@@ -148,6 +152,11 @@ class KGBuilder():
         print(f"Loaded {number_loaded} awards into the knowledge graph.")
         print(f"The graph has {self.graph.number_of_nodes()} nodes and {self.graph.number_of_edges()} edges.")
 
+        # Print deduplication stats
+        print(f"Unique PIs: {len(self.pi_names)}")
+        print(f"Unique Institutions: {len(self.institution_names)}")
+        print(f"Unique Awards: {len(self.award_ids)}")
+
     def get_pi_awards(self, pi_name): 
         """
         Get all awards of a PI 
@@ -174,6 +183,15 @@ class KGBuilder():
         # Get the neighbors for the institution name, neighbors of type PI
         return [n for n in nx.neighbors(self.graph, institution_name)
             if node_types.get(n) == 'PI']
+    
+    def get_deduplication_stats(self):
+        return {
+            'unique_pis': len(self.pi_names),
+            'unique_institutions': len(self.institution_names),
+            'unique_awards': len(self.award_ids),
+            'total_nodes': nx.number_of_nodes(self.graph),
+            'total_edges': nx.number_of_edges(self.graph)
+        }
 
     def get_graph_info(self):
         """
@@ -196,6 +214,12 @@ class KGBuilder():
         for type, count in node_types.items():
             print(f"   {type}: {count}")
         print()
+
+        # Print deduplication stats:
+        stats = self.get_deduplication_stats()
+        print(f"Unique PIs: {stats['unique_pis']}")
+        print(f"Unique Institutions: {stats['unique_institutions']}")
+        print(f"Unique Awards: {stats['unique_awards']}")
 
         # Return dictionary of node_types
         return node_types
