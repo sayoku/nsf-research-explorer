@@ -65,9 +65,16 @@ class KGBuilder():
 
         return normalized
 
-    def extract_keywords(self, text): 
+    def extract_keywords_ner(self, text): 
         """
         Extracting keywords from text using spaCy NER
+
+        Extracts:
+        - ORG - organizations
+        - GPE - geopolitical places/entities
+        - PRODUCT - products/technologies
+        - NORP - nationalities/groups
+        - Key noun and noun phrases 
 
         Args: 
             String text : text to extract keywords from
@@ -80,8 +87,22 @@ class KGBuilder():
         doc = self.nlp(text)
         keywords = set()
 
-        # More to come
-    
+        # Extract named entities
+        for ent in doc.ents:
+            if ent.label in ['ORG', 'GPE', 'PRODUCT', 'NORP', 'FAC', 'LOC']:
+                # Clean the entity text
+                keyword = ent.text.strip().lower()
+                if len(keyword) > 2 and keyword not in ['the', 'and', 'or']: # Don't need these
+                    keywords.add(keyword)
+
+        # Extract noun chunks (concepts)
+        for chunk in doc.noun_chunks:
+            chunk_text = chunk.text.strip.lower() # Again clean it up
+            if 3 < len(chunk_text) < 30 and len(chunk_text.split()) <= 3:
+                keywords.add(chunk_text)
+
+        return list(keywords)[:10]
+     
     def extract_keywords_simple(self, text): 
         """
         Extracting keywords from text (in this case, the abstract)
@@ -97,6 +118,16 @@ class KGBuilder():
         keywords = [w for w in words if len(w) > 5 and w not in common]
         # return the first 10 keywords, making sure they're not duplicates, and convert back to list
         return list(set(keywords[:10]))
+    
+    def extract_keywords(self, text):
+        """
+        Puts all keyword extraction together.
+        Use NER if available, and use simple if necessary
+        """
+        if self.nlp: 
+            return self.extract_keywords_ner(text)
+        else: 
+            return self.extract_keywords_simple(text)
 
     def add_award(self, award):
         """
@@ -149,8 +180,8 @@ class KGBuilder():
         self.graph.add_edge(pi_name, institution, relationship='affiliated_with')
 
         # Extract topic and keywords using extract_keywords
-
         keywords = self.extract_keywords(abstract)
+
         # Further limiting amount of keywords used
         for key in keywords[:5]:
             topicword = f"Topic_{key}"
