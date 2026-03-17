@@ -84,7 +84,7 @@ class KGBuilder():
         if not text or not self.nlp:
             return self.extract_keywords_simple(text)
         
-        doc = self.nlp(text)
+        doc = self.nlp(text[:2000])
         keywords = set()
 
         # Extract named entities
@@ -97,7 +97,7 @@ class KGBuilder():
 
         # Extract noun chunks (concepts)
         for chunk in doc.noun_chunks:
-            chunk_text = chunk.text.strip.lower() # Again clean it up
+            chunk_text = chunk.text.strip().lower() # Again clean it up
             if 3 < len(chunk_text) < 30 and len(chunk_text.split()) <= 3:
                 keywords.add(chunk_text)
 
