@@ -76,8 +76,9 @@ if st.session_state.loaded == True:
     with tab1:
         st.header("Knowledge graph overview and summary")
         # Get stats and organize them into columns
-        col1, col2, col3 = st.columns(3)
+        stats = st.session_state.kg.get_deduplication_stats()
 
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("Total Nodes", nx.number_of_nodes(st.session_state.kg.graph))
         with col2:
@@ -86,17 +87,13 @@ if st.session_state.loaded == True:
             density = nx.density(st.session_state.kg.graph)
             # show as 4-decimal float 
             st.metric("Graph Density", f"{density:.4f}")
+        with col4:
+            st.metric("Unique PIs", stats['unique_pis'])
 
         st.subheader("Node type breakdown")
-        # Get node attributes from the graph 
-        node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
-        type_counts = {}
-        # For each value in node_types, add to type counts if present
-        for node_type in node_types.values():
-            type_counts[node_type] = type_counts.get(node_type, 0) + 1
+        # Use get_graph_info to get counts of types
+        type_counts = st.session_state.kg.get_graph_info()
         # Show as bar chart
-
-        # Ew we gotta change the orientation/presentation later...
         st.bar_chart(type_counts)
 
     # tab2
