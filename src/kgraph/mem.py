@@ -89,7 +89,7 @@ class KGBuilder():
 
         # Extract named entities
         for ent in doc.ents:
-            if ent.label in ['ORG', 'GPE', 'PRODUCT', 'NORP', 'FAC', 'LOC']:
+            if ent.label_ in ['ORG', 'GPE', 'PRODUCT', 'NORP', 'FAC', 'LOC']:
                 # Clean the entity text
                 keyword = ent.text.strip().lower()
                 if len(keyword) > 2 and keyword not in ['the', 'and', 'or']: # Don't need these
