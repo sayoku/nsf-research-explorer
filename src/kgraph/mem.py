@@ -183,7 +183,7 @@ class KGBuilder():
         keywords = self.extract_keywords(abstract)
 
         # Further limiting amount of keywords used
-        for key in keywords[:5]:
+        for key in keywords:
             topicword = f"Topic_{key}"
             if not self.graph.has_node(topicword):
                 self.graph.add_node(
@@ -191,6 +191,25 @@ class KGBuilder():
                     type = 'Topic'
                 )
         self.graph.add_edge(f"Award_{award_id}", topicword, relationship = 'focuses on')
+
+    def get_awards_by_topic(self, topic_keyword):
+        """
+        Find all awards related to a topic
+        
+        Args:
+            String topic_keyword: Topic to search for
+            
+        Returns:
+            list: Award node IDs
+        """
+        topic_id = f"Topic_{topic_keyword.replace(' ', '_')}"
+        
+        if topic_id not in self.graph:
+            return []
+        
+        # Get all neighbors that are awards
+        return [n for n in nx.neighbors(self.graph, topic_id) 
+                if n.startswith('Award_')]
 
     def load_query_results(self, query, max_awards = 100): 
         """
