@@ -9,6 +9,15 @@ sys.path.insert(0, src_dir)
 
 from agent.tool import NSFAgent, query_nsf_api
 
+# Import spaCy for NER
+
+try: 
+    import spacy
+    SPACY_AVAIL = True
+except ImportError:
+    SPACY_AVAIL = False
+    print("Warning: spaCy not installed.")
+
 class KGBuilder():
     """
     Knowledge graph builder for NSF Awards using NetworkX.
@@ -23,6 +32,15 @@ class KGBuilder():
         self.pi_names = set()
         self.institution_names = set()
         self.award_ids = set()
+
+        # Load spaCy model if available
+        if SPACY_AVAIL:
+            try:
+                self.nlp = spacy.load("en_core_web_sm")
+            except: 
+                self.nlp = None
+        else: 
+            self.nlp = None
 
     def normalize_name(self, name):
         """
@@ -46,6 +64,39 @@ class KGBuilder():
         normalized = normalized.title()
 
         return normalized
+
+    def extract_keywords(self, text): 
+        """
+        Extracting keywords from text using spaCy NER
+
+        Args: 
+            String text : text to extract keywords from
+        Returns: 
+            List keywords : a list of keywords
+        """
+        if not text or not self.nlp:
+            return self.extract_keywords_simple(text)
+        
+        doc = self.nlp(text)
+        keywords = set()
+
+        # More to come
+    
+    def extract_keywords_simple(self, text): 
+        """
+        Extracting keywords from text (in this case, the abstract)
+
+        Args: 
+            String text : text to extract keywords from
+        Returns: 
+            List keywords : a list of keywords
+        """
+        # There probably is a better way to do this, still thinking on it. 
+        common = ["research", "study", "investigation", "development", "analysis"]
+        words = text.lower().split() 
+        keywords = [w for w in words if len(w) > 5 and w not in common]
+        # return the first 10 keywords, making sure they're not duplicates, and convert back to list
+        return list(set(keywords[:10]))
 
     def add_award(self, award):
         """
@@ -109,22 +160,6 @@ class KGBuilder():
                     type = 'Topic'
                 )
         self.graph.add_edge(f"Award_{award_id}", topicword, relationship = 'focuses on')
-
-    def extract_keywords(self, text): 
-        """
-        Extracting keywords from text (in this case, the abstract)
-
-        Args: 
-            String text : text to extract keywords from
-        Returns: 
-            List keywords : a list of keywords
-        """
-        # There probably is a better way to do this, still thinking on it. 
-        common = ["research", "study", "investigation", "development", "analysis"]
-        words = text.lower().split() 
-        keywords = [w for w in words if len(w) > 5 and w not in common]
-        # return the first 10 keywords, making sure they're not duplicates, and convert back to list
-        return list(set(keywords[:10]))
 
     def load_query_results(self, query, max_awards = 100): 
         """
