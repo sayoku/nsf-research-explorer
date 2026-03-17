@@ -184,13 +184,10 @@ class KGBuilder():
 
         # Further limiting amount of keywords used
         for key in keywords:
-            topicword = f"Topic_{key}"
+            topicword = f"Topic_{key.replace(' ', '_')}" # Clean up spaces
             if not self.graph.has_node(topicword):
-                self.graph.add_node(
-                    topicword,
-                    type = 'Topic'
-                )
-        self.graph.add_edge(f"Award_{award_id}", topicword, relationship = 'focuses on')
+                self.graph.add_node(topicword, type = 'Topic')
+            self.graph.add_edge(f"Award_{award_id}", topicword, relationship = 'focuses on')
 
     def get_awards_by_topic(self, topic_keyword):
         """
