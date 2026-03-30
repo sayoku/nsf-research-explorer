@@ -57,12 +57,18 @@ with st.sidebar:
     if st.button("Search", type="primary"):
         if query:
             with st.spinner("Searching NSF database..."):
-                st.session_state.kg = KGBuilder()  # Resetting
+                # st.session_state.kg = KGBuilder()  # Resetting
                 st.session_state.kg.load_query_results(query, max_awards=max_awards)
                 st.session_state.loaded = True
                 st.success(f"Loaded {max_awards} awards!")
         else:
             st.warning("Please enter a search query")
+
+    # Add a reset button below Search
+    if st.button("Reset Graph", type="secondary"):
+        st.session_state.kg = KGBuilder()
+        st.session_state.loaded = False
+        st.success("Graph cleared!")
 
     if st.button("Send snow!"):
         st.snow()
