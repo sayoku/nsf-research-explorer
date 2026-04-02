@@ -138,7 +138,23 @@ class KGQueryAgent():
             
             for node in self.graph.nodes():
                 if pattern in str(node).lower(): #if the pattern is found, add the matching nodes to the list
-                    matching_nodes.append(node)
+                    matching_nodes.append(node) 
             
             return matching_nodes
+        
+        # Operation #3
+        def find_neighbors(self, node: str, max_depth int = 1) -> list:
+            """Find all neighbors up to a max depth"""
+            if node not in self.graph:
+                return[]
+            neighbors = {node}
+            current_level = {node}
 
+            for i in range(max_depth):
+                next_level = set() # Empty set for next level
+                for node in current_level: # For each node in current level, 
+                    next_level.update(nx.neighbors(self.graph, node)) #add it's neighbors to the next layer
+                neighbors.update(next_level) # Add new nodes to total
+                current_level = next_level # Move to the next level
+
+            return list(neighbors)
