@@ -79,3 +79,38 @@ class KGQueryAgent():
         Now process the user's query.
         """
 
+        def parse_query(self, query: str) -> dict: 
+            """Use claude to parse the natural language query into operations
+            
+            Args: 
+                String query: Natural language query from user
+            
+            Returns:
+                Dict : parsed query with operations and paramters
+            """
+            message = self.client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1000,
+            system = self.system_prompt,
+            messages=[
+                {"role": "user", "content": query}
+            ]
+            )
+            # This is the raw response
+            response_raw = message.content[0].text
+            response = ""
+            # Take the json and find the start and end to the information we want
+            if "```json" in response_raw:
+                start = response_raw.find("```json") + 7
+                end = response_raw.find("```", start)
+                # slice the string and strip in case
+                response = response_raw[start:end].strip() 
+            elif "```" in response_raw:
+                start = response_raw.find("```") + 3
+                end = response_raw.find("```", start)
+                # slice the string and strip in case
+                response = response_raw[start:end].strip() 
+            
+            # Parse json into python dictionary
+            params = json.loads(response)
+            
