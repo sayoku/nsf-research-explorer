@@ -113,4 +113,32 @@ class KGQueryAgent():
             
             # Parse json into python dictionary
             params = json.loads(response)
+
+        # Available graph operations:
+        # 1. find_by_type: Find all nodes of a specific type
+        # 2. find_by_name: Find nodes with names matching a pattern
+        # 3. find_neighbors: Find all neighbors of a node
+        # 4. find_by_topic: Find awards related to a topic
+        # 5. find_by_amount: Find awards within a funding range
+        # 6. find_pi_awards: Find all awards for a specific PI
+        # 7. find_institution_pis: Find all PIs at an institution
+        
+        # Operation #1 
+        def find_by_type(self, node_type: str) -> list:
+            """ Finds all nodes of a specific type"""
+             # Get node types (get attribute of type)
+            node_types = nx.get_node_attributes(self.graph, 'type')
+            return [n for n, ntype in node_types.items() if ntype.lower() == node_type.lower()]
+        
+        # Operation #2
+        def find_by_name(self, name_pattern: str) -> list:
+            """Find nodes with names matching a pattern (not case sensitive)"""
+            pattern = name_pattern.lower()
+            matching_nodes = []
             
+            for node in self.graph.nodes():
+                if pattern in str(node).lower(): #if the pattern is found, add the matching nodes to the list
+                    matching_nodes.append(node)
+            
+            return matching_nodes
+
