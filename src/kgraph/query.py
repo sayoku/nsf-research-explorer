@@ -159,3 +159,26 @@ class KGQueryAgent():
             current_level = next_level # Move to the next level
 
         return list(neighbors)
+    
+    # Operation 4
+    def find_by_topic(self, topic_keyword: str) -> list:
+        """Find awards related to a topic"""
+        # Match topic to keyword
+        topic_nodes = []
+        for node in self.graph.nodes():
+            if node.startswith('Topic_') and topic_keyword.lower() in node.lower():
+                topic_nodes.append(node)
+        
+        # Grab them awards
+        award_nodes = set()
+        for topic in topic_nodes:
+            for neighbor in nx.neighbors(self.graph, topic):
+                if neighbor.startswith('Award_'):
+                    award_nodes.add(neighbor)
+        
+        # Return subgraph (topics + awards + connections)
+        all_nodes = set(topic_nodes) | award_nodes
+        for award in award_nodes:
+            all_nodes.update(nx.neighbors(self.graph, award))
+        
+        return list(all_nodes)
