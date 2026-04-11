@@ -114,15 +114,6 @@ class KGQueryAgent():
         # Parse json into python dictionary
         params = json.loads(response)
         return params
-
-    # Available graph operations:
-    # 1. find_by_type: Find all nodes of a specific type
-    # 2. find_by_name: Find nodes with names matching a pattern
-    # 3. find_neighbors: Find all neighbors of a node
-    # 4. find_by_topic: Find awards related to a topic
-    # 5. find_by_amount: Find awards within a funding range
-    # 6. find_pi_awards: Find all awards for a specific PI
-    # 7. find_institution_pis: Find all PIs at an institution
         
     # Operation #1 
     def find_by_type(self, node_type: str) -> list:
@@ -217,3 +208,18 @@ class KGQueryAgent():
         # Get all neighbors
         return self.find_neighbors(pi_node, max_depth=1)
     
+    # Operation 7
+    def find_institution_pis(self, institution_name: str) -> list:
+        """Find all PIs at an institution."""
+        inst_node = None # Find instiution node 
+        for node in self.graph.nodes():
+            node_data = self.graph.nodes[node]
+            if node_data.get('type') == 'Institution' and institution_name.lower() in str(node).lower():
+                inst_node = node
+                break
+        
+        if not inst_node:
+            return []
+        
+        # Get all neighbors
+        return self.find_neighbors(inst_node, max_depth=2)
