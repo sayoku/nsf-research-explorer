@@ -223,3 +223,13 @@ class KGQueryAgent():
         
         # Get all neighbors
         return self.find_neighbors(inst_node, max_depth=2)
+    
+    def query (self, user_query:str) -> tuple: 
+        """Process natural language query and return relevant subgraph
+        Args:
+            user_query (str): Natural language query 
+        Returns: 
+            tuple: (subgraph, explanation, nodes_of_interest)
+        """
+        # Parse query
+        parsed = self.parse_query(user_query)
