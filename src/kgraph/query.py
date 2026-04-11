@@ -182,3 +182,38 @@ class KGQueryAgent():
             all_nodes.update(nx.neighbors(self.graph, award))
         
         return list(all_nodes)
+
+    # Operation 5
+    def find_by_amount(self, min_amount: int = 0, max_amount: int = float('inf')) -> list:
+        """Find awards within a funding range."""
+        matching_awards = []
+        
+        for node in self.graph.nodes():
+            if node.startswith('Award_'): # Awards only 
+                amount = self.graph.nodes[node].get('amount', 0)
+                if min_amount <= amount <= max_amount: # check if it's within bounds
+                    matching_awards.append(node)
+        
+        # Include PI and insitution connections
+        all_nodes = set(matching_awards)
+        for award in matching_awards:
+            all_nodes.update(nx.neighbors(self.graph, award))
+        
+        return list(all_nodes)
+    
+    # Operation 6
+    def find_pi_awards(self, pi_name: str) -> list:
+        """Find all awards for a specific PI."""
+        pi_node = None       # Find PI node 
+        for node in self.graph.nodes():
+            node_data = self.graph.nodes[node] # pull data and check type and if it matches
+            if node_data.get('type') == 'PI' and pi_name.lower() in str(node).lower():
+                pi_node = node 
+                break
+        
+        if not pi_node:
+            return []
+        
+        # Get all neighbors
+        return self.find_neighbors(pi_node, max_depth=1)
+    
