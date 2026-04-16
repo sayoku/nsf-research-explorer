@@ -257,7 +257,7 @@ class KGQueryAgent():
             return None, parsed["explanation"], []
         
         # Execute operation: 
-        nodes_of_interest = self.execute_ops(parsed["operation"], ["parameters"])
+        nodes_of_interest = self.execute_ops(parsed["operation"], parsed["parameters"])
 
         # Create subgraph
         if nodes_of_interest: 
