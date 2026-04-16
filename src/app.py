@@ -78,7 +78,7 @@ with st.sidebar:
     nl_query = st.text_input("Ask about the graph:", placeholder="e.g., Show water research")
     if st.button("Query Graph"):
         agent = KGQueryAgent(st.session_state.kg.graph)
-        subgraph, explanation, nodes = agent.query(nl_query)
+        subgraph, explanation, nodes = agent.subquery(nl_query)
             
         st.success(explanation)
         st.info(f"Found {len(nodes)} relevant nodes")
