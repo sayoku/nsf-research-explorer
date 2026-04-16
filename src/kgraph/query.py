@@ -230,19 +230,19 @@ class KGQueryAgent():
         if operation == "find_by_type":
             return self.find_by_type(parameters.get("node_type", ""))
         elif operation == "find_by_name":
-            return self.find_by_type(parameters.get("name_pattern", ""))
+            return self.find_by_name(parameters.get("name_pattern", ""))
         elif operation == "find_neightbors":
-            return self.find_by_type(parameters.get("node_name", ""), parameters.get("max_depth", 1))
+            return self.find_neighbors(parameters.get("node_name", ""), parameters.get("max_depth", 1))
         elif operation == "find_by_topic":
-            return self.find_by_type(parameters.get("topic", ""))
+            return self.find_by_topic(parameters.get("topic", ""))
         elif operation == "find_by_amount":
-            return self.find_by_type(parameters.get("min_amount", 0), parameters.get("max_amount", 1))
+            return self.find_by_amount(parameters.get("min_amount", 0), parameters.get("max_amount", 1))
         elif operation == "find_pi_awards":
-            return self.find_by_type(parameters.get("pi_name", ""))
+            return self.find_pi_awards(parameters.get("pi_name", ""))
         elif operation == "find_institution_pis":
-            return self.find_by_type(parameters.get("node_type", ""))
+            return self.find_institution_pis(parameters.get("node_type", ""))
         else:     
-            return self.find_by_type(parameters.get("institution", ""))
+            return []
     
     def subquery (self, user_query:str) -> tuple: 
         """Process natural language query and return relevant subgraph
