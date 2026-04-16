@@ -244,7 +244,7 @@ class KGQueryAgent():
         else:     
             return self.find_by_type(parameters.get("institution", ""))
     
-    def query (self, user_query:str) -> tuple: 
+    def subquery (self, user_query:str) -> tuple: 
         """Process natural language query and return relevant subgraph
         Args:
             user_query (str): Natural language query 
