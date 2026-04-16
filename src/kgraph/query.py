@@ -224,6 +224,26 @@ class KGQueryAgent():
         # Get all neighbors
         return self.find_neighbors(inst_node, max_depth=2)
     
+    # Execute operations, since we end up with a json, I'm just going to do a bunch of if-elseifs 
+    def execute_ops(self, operation: str, parameters:dict) -> list:
+        # Returns nodes of interest in a list 
+        if operation == "find_by_type":
+            return self.find_by_type(parameters.get("node_type", ""))
+        elif operation == "find_by_name":
+            return self.find_by_type(parameters.get("name_pattern", ""))
+        elif operation == "find_neightbors":
+            return self.find_by_type(parameters.get("node_name", ""), parameters.get("max_depth", 1))
+        elif operation == "find_by_topic":
+            return self.find_by_type(parameters.get("topic", ""))
+        elif operation == "find_by_amount":
+            return self.find_by_type(parameters.get("min_amount", 0), parameters.get("max_amount", 1))
+        elif operation == "find_pi_awards":
+            return self.find_by_type(parameters.get("pi_name", ""))
+        elif operation == "find_institution_pis":
+            return self.find_by_type(parameters.get("node_type", ""))
+        else:     
+            return self.find_by_type(parameters.get("institution", ""))
+    
     def query (self, user_query:str) -> tuple: 
         """Process natural language query and return relevant subgraph
         Args:
@@ -233,3 +253,16 @@ class KGQueryAgent():
         """
         # Parse query
         parsed = self.parse_query(user_query)
+        if parsed["operation"] == "error":
+            return None, parsed["explanation"], []
+        
+        # Execute operation: 
+        nodes_of_interest = self.execute_ops(parsed["operation"], ["parameters"])
+
+        # Create subgraph
+        if nodes_of_interest: 
+            subgraph = self.graph.subgraph(nodes_of_interest).copy()
+        else: 
+            subgraph = nx.Graph() # New one lele
+        return subgraph, parsed["explanation"], nodes_of_interest
+    
