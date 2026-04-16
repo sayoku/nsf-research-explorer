@@ -271,14 +271,14 @@ if st.session_state.loaded == True:
                     
                     # Draw graph
                     nx.draw(
-                    st.session_state.kg.graph,
+                    st.session_state.subgraph,
                     pos2,
                     node_color=node_colors,
                     node_size=node_size,
                     with_labels=True,
                     font_size=6,
                     font_weight='bold',
-                    ax=ax,
+                    ax=ax2,
                     edge_color='#CCCCCC',
                     alpha=0.7
                     )
