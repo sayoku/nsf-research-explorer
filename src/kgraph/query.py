@@ -253,8 +253,8 @@ class KGQueryAgent():
         """
         # Parse query
         parsed = self.parse_query(user_query)
-        if parsed["operation"] == "error":
-            return None, parsed["explanation"], []
+        # if parsed["operation"] == "error":
+        #     return None, parsed["explanation"], []
         
         # Execute operation: 
         nodes_of_interest = self.execute_ops(parsed["operation"], parsed["parameters"])

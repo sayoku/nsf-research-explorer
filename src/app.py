@@ -248,6 +248,43 @@ if st.session_state.loaded == True:
                 ax.legend(handles=legend_elements, loc='lower right')
                 
                 st.pyplot(fig)
+                
+                # Display subgraph
+                if 'subgraph' in st.session_state and st.session_state.subgraph is not None: 
+                    st.subheader("Subgraph Query Result")
+                if len(st.session_state.subgraph.nodes()) > 0:
+                    fig2, ax2 = plt.subplots(figsize=(12, 8))
+                    
+                    pos = nx.spring_layout(st.session_state.subgraph)
+                    
+                    node_types = nx.get_node_attributes(st.session_state.subgraph, 'type')
+                    color_map = {
+                        'PI': '#CF9FFF',
+                        'Institution': '#4ECDC4',
+                        'Award': '#6495ED',
+                        'Topic': '#E37383'
+                    }
+                    node_colors = [color_map.get(node_types.get(node, ''), '#95E1D3')
+                                for node in st.session_state.subgraph.nodes()]
+                    
+                    # Draw graph
+                    nx.draw(
+                    st.session_state.kg.graph,
+                    pos,
+                    node_color=node_colors,
+                    node_size=node_size,
+                    with_labels=True,
+                    font_size=6,
+                    font_weight='bold',
+                    ax=ax,
+                    edge_color='#CCCCCC',
+                    alpha=0.7
+                    )
+                    st.pyplot(fig2)
+                else: 
+                    st.warning("subgraph is empty - no nodes matched your query")
+
+
 
 else:
     st.info("Enter a query in the sidebar to get started")
