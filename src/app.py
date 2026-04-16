@@ -33,6 +33,8 @@ if 'kg' not in st.session_state:
     st.session_state.kg = KGBuilder()
 if 'loaded' not in st.session_state:
     st.session_state.loaded = False
+if 'subgraph' not in st.session_state:          
+    st.session_state.subgraph = None  
 
 # Add sidebar for query
 with st.sidebar:
