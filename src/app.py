@@ -257,7 +257,7 @@ if st.session_state.loaded == True:
                 if len(st.session_state.subgraph.nodes()) > 0:
                     fig2, ax2 = plt.subplots(figsize=(12, 8))
                     
-                    pos = nx.spring_layout(st.session_state.subgraph)
+                    pos2 = nx.spring_layout(st.session_state.subgraph)
                     
                     node_types = nx.get_node_attributes(st.session_state.subgraph, 'type')
                     color_map = {
@@ -272,7 +272,7 @@ if st.session_state.loaded == True:
                     # Draw graph
                     nx.draw(
                     st.session_state.kg.graph,
-                    pos,
+                    pos2,
                     node_color=node_colors,
                     node_size=node_size,
                     with_labels=True,
