@@ -10,6 +10,7 @@ sys.path.insert(0, current_dir)
 
 from agent.tool import NSFAgent
 from kgraph.mem import KGBuilder
+from kgraph.query import KGQueryAgent 
 
 # Configure page
 st.set_page_config(page_title="NSF Research Explorer", layout="wide")
@@ -72,6 +73,19 @@ with st.sidebar:
 
     if st.button("Send snow!"):
         st.snow()
+
+    st.header("Subgraph Query")
+    nl_query = st.text_input("Ask about the graph:", placeholder="e.g., Show water research")
+    if st.button("Query Graph"):
+        agent = KGQueryAgent(st.session_state.kg.graph)
+        subgraph, explanation, nodes = agent.query(nl_query)
+            
+        st.success(explanation)
+        st.info(f"Found {len(nodes)} relevant nodes")
+            
+        # Store subgraph in session
+        st.session_state.subgraph = subgraph
+
 
 # Main content
 if st.session_state.loaded == True:
