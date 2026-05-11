@@ -1,4 +1,5 @@
 import streamlit as st
+import steamlit.components.v1 as components
 import networkx as nx
 import matplotlib.pyplot as plt
 import sys
@@ -11,6 +12,33 @@ sys.path.insert(0, current_dir)
 from agent.tool import NSFAgent
 from kgraph.mem import KGBuilder
 from kgraph.query import KGQueryAgent 
+
+# pyvis integrates with networkx
+def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, node_size: int = 20) -> str:
+    """
+    Convert a networkx graph to a pvis html string
+    Node colors correspond to type, clicking a node shows all attributes
+    Returns full HTML string for st.components.v1.html()
+    """
+    # Import pyvis
+    try:
+        from pyvis.network import Network
+    except ImportError:
+        return  "<p style='color:red'>pyvis is not installed. Run: pip install pyvis</p>"
+
+    # Colors match current matplotlib colors, basic and highlighted 
+    COLORS = {
+        "PI":          {"background": "#CF9FFF", "border": "#9B59D0", "highlight": {"background": "#E0C0FF", "border": "#7B3FB0"}},
+        "Institution": {"background": "#4ECDC4", "border": "#2BA39B", "highlight": {"background": "#80E8E2", "border": "#1A8077"}},
+        "Award":       {"background": "#6495ED", "border": "#3A6BC0", "highlight": {"background": "#A0B8F5", "border": "#2A55A0"}},
+        "Topic":       {"background": "#E37383", "border": "#B84055", "highlight": {"background": "#F0A0B0", "border": "#902030"}},
+    }
+    # Example: Network(height="750px", width="100%", bgcolor="#222222", font_color="white")
+    net = Network(height=f"{height}px", width="100%", bgcolor="#0F1117", font_color="#E8E8E8", directed=False)
+    
+    # set physics layout 
+
+
 
 # Configure page
 st.set_page_config(page_title="NSF Research Explorer", layout="wide")
