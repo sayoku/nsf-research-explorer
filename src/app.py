@@ -49,12 +49,12 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
                 continue
             if k == "abstract" and v:
                 chunk = str(v)[:300] + ("…" if len(str(v)) > 300 else "")
-                lines.append(f"<b>{k}:</b> {chunk}")
+                lines.append(f"{k}: {chunk}")
             elif k == "amount" and v:
-                lines.append(f"<b>{k}:</b> ${int(v):,}")
+                lines.append(f"{k}: ${int(v):,}")
             elif v:
-                lines.append(f"<b>{k}:</b> {v}")
-        g.nodes[node]["title"] = "<br>".join(lines)
+                lines.append(f"{k}: {v}")
+        g.nodes[node]["title"] = "\n".join(lines)
 
         # label, visible text on node
         label = node
