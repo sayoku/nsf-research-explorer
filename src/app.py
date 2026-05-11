@@ -1,5 +1,5 @@
 import streamlit as st
-import steamlit.components.v1 as components
+import streamlit.components.v1 as components
 import networkx as nx
 import sys
 import os
@@ -264,104 +264,72 @@ if st.session_state.loaded == True:
 
         st.markdown(
             """ 
-            A work in progress: currently using NetworkX and Matpotlib.pyplot
-
+            Hover over a node to see details
+            Drag nodes to rearrange
+            Scroll to zoom
+            Click and drag the canvas to pan
             """
         )        
 
-        # Visualization options
-        layout_type = st.selectbox(
-            "Select layout:",
-            ["Spring", "Circular", "Kamada-Kawai"]
+        # Controls 
+        col_a, col_b, col_c = st.columns([1, 1, 2])
+        with col_a:
+            graph_height = st.slider("Graph height (px):", 400, 900, 620, step=50)
+        with col_b:
+            node_size = st.slider("Node size:", 8, 40, 18)
+        with col_c:
+            physics_on = st.toggle("Physics / live layout", value=True)
+            show_subgraph = st.toggle(
+                "Show subgraph only",
+                value=False,
+                disabled=st.session_state.subgraph is None,
+                help="Toggle to view only the nodes returned by your Subgraph Query",
+            )
+
+        # decide graph to render
+        active_graph = st.session_state.kg.graph
+        graph_label = "Full Knowledge Graph"
+        if show_subgraph and st.session_state.subgraph is not None:
+            active_graph = st.session_state.subgraph
+            graph_label = "Subgraph Query Result"
+ 
+        st.caption(
+            f"**{graph_label}** — "
+            f"{nx.number_of_nodes(active_graph)} nodes · "
+            f"{nx.number_of_edges(active_graph)} edges"
         )
+
+        # Rendering graph
+
+        with st.spinner("Rendering interactive graph…"):
+            html_str = build_pyvis_html(
+                active_graph,
+                height=graph_height,
+                physics_enabled=physics_on,
+                node_size=node_size,
+            )
+ 
+        components.html(html_str, height=graph_height + 20, scrolling=False)
         
-        node_size = st.slider("Node size:", 100, 1000, 300)
-        
-        if st.button("Generate Visualization"):
-            with st.spinner("Generating graph visualization..."):
-                fig, ax = plt.subplots(figsize=(14, 10))
-                
-                # Choose layout and use according networkX layout
-                if layout_type == "Spring":
-                    pos = nx.spring_layout(st.session_state.kg.graph)
-                elif layout_type == "Circular":
-                    pos = nx.circular_layout(st.session_state.kg.graph)
-                else:
-                    pos = nx.kamada_kawai_layout(st.session_state.kg.graph)
-                
-                # Color nodes by type
-                node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
-                color_map = {
-                    'PI': '#CF9FFF',
-                    'Institution': '#4ECDC4',
-                    'Award': '#6495ED',
-                    'Topic': '#E37383'
-                }
-                # Loop through each node in the graph, and grab it's type, if not found, return ''. 
-                # Get the color for the type, default is the teal color.
-                node_colors = [color_map.get(node_types.get(node, ''), '#95E1D3') 
-                             for node in st.session_state.kg.graph.nodes()]
-                
-                # Draw graph
-                nx.draw(
-                    st.session_state.kg.graph,
-                    pos,
-                    node_color=node_colors,
-                    node_size=node_size,
-                    with_labels=True,
-                    font_size=6,
-                    font_weight='bold',
-                    ax=ax,
-                    edge_color='#CCCCCC',
-                    alpha=0.7
+         # If subgraph exists and full graph is shown, offer a separate preview
+        if (
+            st.session_state.subgraph is not None
+            and not show_subgraph
+            and nx.number_of_nodes(st.session_state.subgraph) > 0
+        ):
+            with st.expander("Subgraph query result preview"):
+                st.caption(
+                    f"{nx.number_of_nodes(st.session_state.subgraph)} nodes · "
+                    f"{nx.number_of_edges(st.session_state.subgraph)} edges"
                 )
-                
-                # Legend
-                legend_elements = [
-                    plt.Line2D([0], [0], marker='o', color='w', 
-                             markerfacecolor=color, markersize=10, label=node_type)
-                    for node_type, color in color_map.items()
-                ]
-                ax.legend(handles=legend_elements, loc='lower right')
-                
-                st.pyplot(fig)
-                
-                # Display subgraph
-                if 'subgraph' in st.session_state and st.session_state.subgraph is not None: 
-                    st.subheader("Subgraph Query Result")
-                if len(st.session_state.subgraph.nodes()) > 0:
-                    fig2, ax2 = plt.subplots(figsize=(12, 8))
-                    
-                    pos2 = nx.spring_layout(st.session_state.subgraph)
-                    
-                    node_types = nx.get_node_attributes(st.session_state.subgraph, 'type')
-                    color_map = {
-                        'PI': '#CF9FFF',
-                        'Institution': '#4ECDC4',
-                        'Award': '#6495ED',
-                        'Topic': '#E37383'
-                    }
-                    node_colors = [color_map.get(node_types.get(node, ''), '#95E1D3')
-                                for node in st.session_state.subgraph.nodes()]
-                    
-                    # Draw graph
-                    nx.draw(
+                st.markdown(legend_html(), unsafe_allow_html=True)
+                sub_html = build_pyvis_html(
                     st.session_state.subgraph,
-                    pos2,
-                    node_color=node_colors,
+                    height=420,
+                    physics_enabled=True,
                     node_size=node_size,
-                    with_labels=True,
-                    font_size=6,
-                    font_weight='bold',
-                    ax=ax2,
-                    edge_color='#CCCCCC',
-                    alpha=0.7
-                    )
-                    st.pyplot(fig2)
-                else: 
-                    st.warning("subgraph is empty - no nodes matched your query")
-
-
+                )
+                components.html(sub_html, height=440, scrolling=False)
 
 else:
     st.info("Enter a query in the sidebar to get started")
