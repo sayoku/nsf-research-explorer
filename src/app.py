@@ -302,12 +302,7 @@ if st.session_state.loaded == True:
         # Rendering graph
 
         with st.spinner("Rendering interactive graph…"):
-            html_str = build_pyvis_html(
-                active_graph,
-                height=graph_height,
-                physics_enabled=physics_on,
-                node_size=node_size,
-            )
+            html_str = build_pyvis_html(active_graph, height=graph_height, physics=physics_on, node_size=node_size)
  
         components.html(html_str, height=graph_height + 20, scrolling=False)
         
@@ -322,13 +317,8 @@ if st.session_state.loaded == True:
                     f"{nx.number_of_nodes(st.session_state.subgraph)} nodes · "
                     f"{nx.number_of_edges(st.session_state.subgraph)} edges"
                 )
-                st.markdown(legend_html(), unsafe_allow_html=True)
-                sub_html = build_pyvis_html(
-                    st.session_state.subgraph,
-                    height=420,
-                    physics_enabled=True,
-                    node_size=node_size,
-                )
+                st.markdown(unsafe_allow_html=True)
+                sub_html = build_pyvis_html(st.session_state.subgraph, height=420, physics=True, node_size=node_size)
                 components.html(sub_html, height=440, scrolling=False)
 
 else:
