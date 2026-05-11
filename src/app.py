@@ -1,7 +1,6 @@
 import streamlit as st
 import steamlit.components.v1 as components
 import networkx as nx
-import matplotlib.pyplot as plt
 import sys
 import os
 
@@ -26,6 +25,8 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     except ImportError:
         return  "<p style='color:red'>pyvis is not installed. Run: pip install pyvis</p>"
 
+    import tempfile, pathlib
+
     # Colors match current matplotlib colors, basic and highlighted 
     COLORS = {
         "PI":          {"background": "#CF9FFF", "border": "#9B59D0", "highlight": {"background": "#E0C0FF", "border": "#7B3FB0"}},
@@ -35,10 +36,56 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     }
     # Example: Network(height="750px", width="100%", bgcolor="#222222", font_color="white")
     net = Network(height=f"{height}px", width="100%", bgcolor="#0F1117", font_color="#E8E8E8", directed=False)
-    
-    # set physics layout 
 
+    # make a copy of the graph 
+    g = graph.copy()
+    for node, data in g.nodes(data=True):
+        ntype = data.get("type", "")
 
+        # title, rendered as html on hover
+        lines = [f"<b>{node}</b>", f"<i>Type: {ntype}</i>", "<hr style='margin:4px 0'>"] 
+        for k, v in data.items():
+            if k in ("type", "title", "label", "color", "size"):
+                continue
+            if k == "abstract" and v:
+                chunk = str(v)[:300] + ("…" if len(str(v)) > 300 else "")
+                lines.append(f"<b>{k}:</b> {chunk}")
+            elif k == "amount" and v:
+                lines.append(f"<b>{k}:</b> ${int(v):,}")
+            elif v:
+                lines.append(f"<b>{k}:</b> {v}")
+        g.nodes[node]["title"] = "<br>".join(lines)
+
+        # label, visible text on node
+        label = node
+        if node.startswith("Award_"):
+            label = node.replace("Award_", "")[:12] # bye bye yucky
+        elif node.startswith("Topic_"):
+            label = node.replace("Topic_", "").replace("_", " ") # bye bye other yucky
+        elif len(node) > 22:
+            label = node[:20] + "…"
+        g.nodes[node]["label"] = label
+
+        g.nodes[node]["color"] = COLORS.get(ntype)
+        g.nodes[node]["size"] = node_size if ntype != "Topic" else max(node_size - 6, 8)
+        
+    # build network and load using from_nx()
+    net = Network(height=f"{height}px", width="100%", bgcolor="#0F1117", font_color="#E8E8E8", directed=False)
+    net.from_nx(g) # Translate nodes and edges
+
+    # Use physics thru barnes_hut()
+    if physics: 
+        net.barnes_hut(gravity=-8000, central_gravity=0.3, spring_length=120, spring_strength=0.04, damping=0.09)
+    else:
+        net.toggle_physics(False)
+
+    # generate html
+    with tempfile.NamedTemporaryFile(suffix=".html", delete=False, mode="w") as f:
+        tmp_path = f.name
+    net.save_graph(tmp_path)
+    html = pathlib.Path(tmp_path).read_text(encoding="utf-8")
+    os.unlink(tmp_path)
+    return html
 
 # Configure page
 st.set_page_config(page_title="NSF Research Explorer", layout="wide")
