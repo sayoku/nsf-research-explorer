@@ -43,7 +43,7 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         ntype = data.get("type", "")
 
         # title, rendered as html on hover
-        lines = [f"<b>{node}</b>", f"<i>Type: {ntype}</i>", "<hr style='margin:4px 0'>"] 
+        lines = [f"{node}", f"Type: {ntype}", "---"]
         for k, v in data.items():
             if k in ("type", "title", "label", "color", "size"):
                 continue
