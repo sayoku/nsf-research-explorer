@@ -244,7 +244,7 @@ class KGQueryAgent():
         elif operation == "find_pi_awards":
             return self.find_pi_awards(parameters.get("pi_name", ""))
         elif operation == "find_institution_pis":
-            return self.find_institution_pis(parameters.get("node_type", ""))
+            return self.find_institution_pis(parameters.get("institution", ""))
         else:     
             return []
     
