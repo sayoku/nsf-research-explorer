@@ -68,9 +68,9 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         g.nodes[node]["size"] = node_size if ntype != "Topic" else max(node_size - 6, 8)
         
     # build network and load using from_nx()
-    net = Network(height=f"{height}px", width="100%", bgcolor="#FAF9F6", font_color="#FAF9F6", directed=False)
+    net = Network(height=f"{height}px", width="100%", bgcolor="#0F1117", font_color="#E8E8E8", directed=False)
     net.from_nx(g) # Translate nodes and edges
-   
+
     # Use physics thru barnes_hut()
     if physics: 
         net.barnes_hut(gravity=-8000, central_gravity=0.3, spring_length=120, spring_strength=0.04, damping=0.09)
