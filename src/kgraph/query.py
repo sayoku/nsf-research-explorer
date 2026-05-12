@@ -182,7 +182,11 @@ class KGQueryAgent():
         for node in self.graph.nodes():
             if node.startswith('Award_'): # Awards only 
                 amount = self.graph.nodes[node].get('amount', 0)
-                if min_amount <= amount <= max_amount: # check if it's within bounds
+                try:
+                    amount = float(amount)
+                except (ValueError, TypeError):
+                    amount = 0
+                if min_amount <= amount <= max_amount:
                     matching_awards.append(node)
         
         # Include PI and insitution connections
@@ -236,7 +240,7 @@ class KGQueryAgent():
         elif operation == "find_by_topic":
             return self.find_by_topic(parameters.get("topic", ""))
         elif operation == "find_by_amount":
-            return self.find_by_amount(parameters.get("min_amount", 0), parameters.get("max_amount", 1))
+            return self.find_by_amount(parameters.get("min_amount", 0), parameters.get("max_amount", float('inf')))
         elif operation == "find_pi_awards":
             return self.find_pi_awards(parameters.get("pi_name", ""))
         elif operation == "find_institution_pis":
