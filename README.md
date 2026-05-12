@@ -137,13 +137,11 @@ A web application that renders the connected data as a clickable network diagram
 
 ## Limitations
 
-```bash
 - spaCy topic extraction can be noisy, common words and short fragments sometimes appear as topic
 - Subgraph querying depends on Claude's correct parsing of the operation type, may return empty results
 - Graph size - loading 100 awards can produce many nodes, which may slow down the Pyvis rendering
 - No persistent storage (yet) - the graph resets on page refresh, all data is held in the Streamlit session state
 - NSF API coverage - only searches funded awards, without access to unfunded proposals
-```
 
 ## Future Enhancements
 
