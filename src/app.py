@@ -34,8 +34,8 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         "Award":       {"background": "#6495ED", "border": "#3A6BC0", "highlight": {"background": "#A0B8F5", "border": "#2A55A0"}},
         "Topic":       {"background": "#E37383", "border": "#B84055", "highlight": {"background": "#F0A0B0", "border": "#902030"}},
     }
-    # Example: Network(height="750px", width="100%", bgcolor="#222222", font_color="white")
-    net = Network(height=f"{height}px", width="100%", bgcolor="#0F1117", font_color="#E8E8E8", directed=False)
+    # Example: Network(height="750px", width="100%", bgcolor="#222222", font_color="white") #FAF9F6, #0F1117
+    net = Network(height=f"{height}px", width="100%", bgcolor="#FAF9F6", font_color="#0F1117", directed=False)
 
     # make a copy of the graph 
     g = graph.copy()
