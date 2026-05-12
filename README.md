@@ -125,21 +125,15 @@ Show research at [university name] — shows all PIs and awards at an institutio
 
 ### Phase 1: LLM Agent Foundation
 
-```bash
 This component is the Agent's reasoning core. It translates a human question (e.g., "Find all large grants in California for biology") into the specific parameters needed by the NSF API tool, executes the tool, and then summarizes the resulting data.
-```
 
 ### Phase 2: Knowledge Graph
 
-```bash
 The KG acts as the Agent's long-term, structured Memory. It transforms flat award data into a connected network showing relationships between PIs, Institutions, and research topics.
-```
 
 ### Phase 3: Visualization
 
-```bash
 A web application that renders the connected data as a clickable network diagram, allowing users to dynamically explore the knowledge contained within the Agent's memory (the KG).
-```
 
 ## Limitations
 
