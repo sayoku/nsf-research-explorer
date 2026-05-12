@@ -11,21 +11,23 @@ This project builds a three-component system:
 
 ## Features
 
-- Natural language query processing using LLMs
+- Natural language query processing using Claude
 - NSF Awards API integration for real-time data retrieval
-- Knowledge graph construction
-- Interactive graph visualization
-- Web-based interface
+- Knowledge graph construction with deduplication across PI's, institutions, and awards
+- Named entity recognition (NER) for keyword extraction from award abstracts using spaCy
+- Interactive graph visualization with hover tooltips, zoom, and pan
+- Subgraph querying - asking natural language questions about the loaded graph and explore a filtered view
+- Web-based interface built with Streamlit
 
 ## Technology Stack
 
 - **Python 3.9+**
-- **LLM Integration**:
-- **Graph Processing**:
-- **NLP**:
-- **Visualization**:
-- **Web Framework**:
-- **API Requests**: requests library
+- **LLM Integration**: Anthropic claude-sonnet-4-5 using the anthropic Python SDK
+- **Graph Processing**: NetworkX for graph construction, traversal, and analysis
+- **NLP**: spaCy for named entity recognition and keyword extraction
+- **Visualization**: Pyvis for interactive graph rendering (built on vis.js)
+- **Web Framework**: Streamlit for web interface
+- **API Requests**: requests library for NSF Awards API calls
 
 ## Project Structure
 
@@ -33,16 +35,16 @@ This project builds a three-component system:
 nsf-research-explorer/
 ├── src/
 │   ├── agent/
-│   │  ├── tool.py
+│   │  ├── tool.py # translated natural language to API params, calls the NSF API
 │   │  ├── .env
 │   │  └── __init__.py
-│   ├── knowledge_graph/
-│   │  ├── mem.py
+│   ├── kgraph/
+│   │  ├── mem.py # KGBuilder: builds and manages the NetworkX kgraph
+│   │  ├── query.py # KGQueryAgent: natural language subgraph querying
 │   │  └── __init__.py
-│   └── visualization/
+│   └── app.py # Streamlit application
 ├── data/               
-├── tests/
-├── app.py                         
+├── tests/                      
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
@@ -55,6 +57,7 @@ nsf-research-explorer/
 
 - Python 3.9 or higher
 - Git
+- An Anthropic API Key
 
 ### Installation
 
@@ -80,6 +83,7 @@ nsf-research-explorer/
    ```bash
 
    pip install -r requirements.txt
+   python -m spacy download en_core_web_sm
    ```
 
 4. **Set up environment variables**
@@ -101,17 +105,51 @@ The application will open in your browser at `http://localhost:8501`
 
 ## Usage Examples
 
+```bash
+
+Search for grants:
+
+Water research in Tennessee — loads NSF awards related to water research in TN
+Cognitive science at Ohio State University — finds awards at a specific institution
+Machine learning research — broad topic search across all institutions
+
+Subgraph queries (after loading a graph):
+
+Show me all water-related awards — filters the graph to water topic nodes
+What awards does [PI name] have? — focuses the graph on a specific researcher
+Awards over $500,000 — filters by funding amount
+Show research at [university name] — shows all PIs and awards at an institution
+```
+
 ## Development Phases
 
 ### Phase 1: LLM Agent Foundation
 
+```bash
+This component is the Agent's reasoning core. It translates a human question (e.g., "Find all large grants in California for biology") into the specific parameters needed by the NSF API tool, executes the tool, and then summarizes the resulting data.
+```
+
 ### Phase 2: Knowledge Graph
+
+```bash
+The KG acts as the Agent's long-term, structured Memory. It transforms flat award data into a connected network showing relationships between PIs, Institutions, and research topics.
+```
 
 ### Phase 3: Visualization
 
-## Success Metrics
+```bash
+A web application that renders the connected data as a clickable network diagram, allowing users to dynamically explore the knowledge contained within the Agent's memory (the KG).
+```
 
 ## Limitations
+
+```bash
+- spaCy topic extraction can be noisy, common words and short fragments sometimes appear as topic
+- Subgraph querying depends on Claude's correct parsing of the operation type, may return empty results
+- Graph size - loading 100 awards can produce many nodes, which may slow down the Pyvis rendering
+- No persistent storage (yet) - the graph resets on page refresh, all data is held in the Streamlit session state
+- NSF API coverage - only searches funded awards, without access to unfunded proposals
+```
 
 ## Future Enhancements
 
@@ -120,6 +158,8 @@ The application will open in your browser at `http://localhost:8501`
 - [ ] Time-series analysis with temporal filtering
 - [ ] Multi-language support
 - [ ] Export functionality (PDF reports, CSV data)
+- [ ] Expand node click behavior to link to NSF award page
+- [ ] Add co-invesitgator relationships from award data
 
 ## License
 
@@ -131,6 +171,7 @@ This project uses NetworkX, licensed under the BSD 3-Clause License
 
 - Project concept by Prof. Han-Wei Shen
 - NSF Awards API
+- Anthropic for LLM powered query parsing
 
 ## Contact
 
