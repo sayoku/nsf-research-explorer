@@ -282,7 +282,12 @@ class KGQueryAgent():
             matching_awards = set.intersection(*result_sets) if result_sets else set()
             nodes_of_interest = set(matching_awards)
             for award in matching_awards:
-                nodes_of_interest.update(nx.neighbors(self.graph, award))
+                for neighbor in nx.neighbors(self.graph, award):
+                    nodes_of_interest.add(neighbor)
+                    # Go one more to catch institution nodes
+                    for neighbor2 in nx.neighbors(self.graph, neighbor):
+                        if self.graph.nodes[neighbor2].get('type') == 'Institution':
+                            nodes_of_interest.add(neighbor2)
             nodes_of_interest = list(nodes_of_interest)
         else: 
             # Execute operation: 
