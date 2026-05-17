@@ -77,8 +77,15 @@ class KGQueryAgent():
         Output: {"operation": "find_by_amount", "parameters": {"min_amount": 500000}, "explanation": "Finding awards with funding over $500,000"}
 
         Query: "Water research at Vanderbilt"
-        Output: {"operation": "find_topic_at_institution", "parameters": {"topic": "water", "institution": "vanderbilt"}, "explanation": "Finding water research awards at Vanderbilt"}
-        
+        Output: 
+        {
+        "operations": [
+            {"operation": "find_by_topic", "parameters": {"topic": "water"}},
+            {"operation": "find_institution_pis", "parameters": {"institution": "vanderbilt"}}
+        ],
+        "explanation": "Finding water research awards at Vanderbilt by intersecting topic and institution results"
+        }
+
         Now process the user's query.
         """
 
@@ -263,8 +270,23 @@ class KGQueryAgent():
         # if parsed["operation"] == "error":
         #     return None, parsed["explanation"], []
         
-        # Execute operation: 
-        nodes_of_interest = self.execute_ops(parsed["operation"], parsed["parameters"])
+        # Do all the operations that are necessary. First is if there are multiple
+        if "operations" in parsed: 
+            result_sets = []
+            for op in parsed["operations"]:
+                nodes = self.execute_ops(op["operation"], op["parameters"])
+                awards = {n for n in nodes if n.startswith("Award_")}
+                result_sets.append(awards)
+
+            # Intersect award sets, then re-expand to include neighbors
+            matching_awards = set.intersection(*result_sets) if result_sets else set()
+            nodes_of_interest = set(matching_awards)
+            for award in matching_awards:
+                nodes_of_interest.update(nx.neighbors(self.graph, award))
+            nodes_of_interest = list(nodes_of_interest)
+        else: 
+            # Execute operation: 
+            nodes_of_interest = self.execute_ops(parsed["operation"], parsed["parameters"])
 
         # Create subgraph
         if nodes_of_interest: 
