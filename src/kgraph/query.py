@@ -76,6 +76,9 @@ class KGQueryAgent():
         Query: "Awards over $500,000"
         Output: {"operation": "find_by_amount", "parameters": {"min_amount": 500000}, "explanation": "Finding awards with funding over $500,000"}
 
+        Query: "Water research at Vanderbilt"
+        Output: {"operation": "find_topic_at_institution", "parameters": {"topic": "water", "institution": "vanderbilt"}, "explanation": "Finding water research awards at Vanderbilt"}
+        
         Now process the user's query.
         """
 
@@ -228,6 +231,23 @@ class KGQueryAgent():
         # Get all neighbors
         return self.find_neighbors(inst_node, max_depth=2)
     
+    def find_topic_at_institution(self, topic_keyword: str, institution_name: str) -> list:
+        """Find awards related to a topic at a specific institution."""
+        topic_nodes = self.find_by_topic(topic_keyword)
+        institution_nodes = set(self.find_institution_pis(institution_name))
+        
+        # Intersection is only nodes in both sets
+        overlapping = set(topic_nodes) & institution_nodes
+        if not overlapping:
+            return []
+        
+        # Expand to have neighbors
+        all_nodes = set(overlapping)
+        for node in overlapping:
+            all_nodes.update(nx.neighbors(self.graph, node))
+        
+        return list(all_nodes)
+    
     # Execute operations, since we end up with a json, I'm just going to do a bunch of if-elseifs 
     def execute_ops(self, operation: str, parameters:dict) -> list:
         # Returns nodes of interest in a list 
@@ -245,6 +265,8 @@ class KGQueryAgent():
             return self.find_pi_awards(parameters.get("pi_name", ""))
         elif operation == "find_institution_pis":
             return self.find_institution_pis(parameters.get("institution", ""))
+        elif operation == "find_topic_at_institution":
+            return self.find_topic_at_institution(parameters.get("topic", ""), parameters.get("institution", ""))
         else:     
             return []
     
