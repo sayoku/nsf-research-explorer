@@ -279,12 +279,19 @@ class KGQueryAgent():
                 # If the op returned PIs, expand to their awards first
                 awards = set()
                 for n in nodes:
+                    node_data = self.graph.nodes[n]
                     if n.startswith("Award_"):
                         awards.add(n)
-                    elif self.graph.nodes[n].get('type') == 'PI':
+                    elif node_data.get('type') in ('PI', 'Institution', 'Topic'):
                         for neighbor in nx.neighbors(self.graph, n):
                             if neighbor.startswith("Award_"):
                                 awards.add(neighbor)
+                            # PIs connect to institutions, not awards directly
+                            # go one step further from PI neighbors
+                            elif self.graph.nodes[neighbor].get('type') == 'PI':
+                                for neighbor2 in nx.neighbors(self.graph, neighbor):
+                                    if neighbor2.startswith("Award_"):
+                                        awards.add(neighbor2)
                 result_sets.append(awards)
 
             # Intersect award sets, then re-expand to include neighbors
