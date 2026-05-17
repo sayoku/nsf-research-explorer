@@ -236,7 +236,7 @@ class KGQueryAgent():
             return []
         
         # Get all neighbors
-        return self.find_neighbors(inst_node, max_depth=2)
+        return self.find_neighbors(inst_node, max_depth=1) # Just the PI 
     
     # Execute operations, since we end up with a json, I'm just going to do a bunch of if-elseifs 
     def execute_ops(self, operation: str, parameters:dict) -> list:
@@ -275,7 +275,16 @@ class KGQueryAgent():
             result_sets = []
             for op in parsed["operations"]:
                 nodes = self.execute_ops(op["operation"], op["parameters"])
-                awards = {n for n in nodes if n.startswith("Award_")}
+
+                # If the op returned PIs, expand to their awards first
+                awards = set()
+                for n in nodes:
+                    if n.startswith("Award_"):
+                        awards.add(n)
+                    elif self.graph.nodes[n].get('type') == 'PI':
+                        for neighbor in nx.neighbors(self.graph, n):
+                            if neighbor.startswith("Award_"):
+                                awards.add(neighbor)
                 result_sets.append(awards)
 
             # Intersect award sets, then re-expand to include neighbors
