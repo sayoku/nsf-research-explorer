@@ -103,23 +103,47 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     html = pathlib.Path(tmp_path).read_text(encoding="utf-8")
     os.unlink(tmp_path)
 
+    tooltip_style = """
+    <style>
+    div.vis-tooltip {
+        background-color: #1E2130 !important;
+        color: #F0F0F0 !important;
+        border: 1px solid #444 !important;
+        border-radius: 6px !important;
+        padding: 8px 10px !important;
+        font-size: 13px !important;
+        font-family: sans-serif !important;
+        max-width: 280px !important;
+        line-height: 1.5 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+    }
+    </style>
+    """
+
     # Click handler, use vis.js `network` global 
     # Clicking a PI/Institution/Award node posts a message to the parent Streamlit page
     click_script = f"""
     <script>
     var nodeNav = {json.dumps(node_nav)};
-    network.on("click", function(params) {{
-        if (params.nodes.length > 0) {{
-            var nodeId = params.nodes[0];
-            var paramKey = nodeNav[nodeId];
-            if (paramKey) {{
-                window.parent.postMessage({{type: 'nsf_nav', key: paramKey, value: nodeId}}, '*');
-            }}
+    function attachClickHandler() {{
+        if (typeof network !== 'undefined') {{
+            network.on("click", function(params) {{
+                if (params.nodes.length > 0) {{
+                    var nodeId = params.nodes[0];
+                    var paramKey = nodeNav[nodeId];
+                    if (paramKey) {{
+                        window.parent.postMessage({{type: 'nsf_nav', key: paramKey, value: nodeId}}, '*');
+                    }}
+                }}
+            }});
+        }} else {{
+            setTimeout(attachClickHandler, 100);
         }}
-    }});
+    }}
+    setTimeout(attachClickHandler, 100);
     </script>
     """
-
+    html = html.replace("</head>", tooltip_style + "</head>")
     html = html.replace("</body>", click_script + "</body>")
     return html 
 
