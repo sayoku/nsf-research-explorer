@@ -13,7 +13,7 @@ from kgraph.mem import KGBuilder
 from kgraph.query import KGQueryAgent 
 
 # pyvis integrates with networkx
-def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, node_size: int = 20) -> str:
+def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, node_size: int = 20, base_url: str = "") -> str:
     """
     Convert a networkx graph to a pvis html string
     Node colors correspond to type, clicking a node shows all attributes
