@@ -37,6 +37,7 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     
     # make a copy of the graph 
     g = graph.copy()
+    node_titles = {} 
     for node, data in g.nodes(data=True):
         ntype = data.get("type", "")
 
@@ -74,13 +75,18 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         elif len(node) > 22:
             label = node[:20] + "…"
         g.nodes[node]["label"] = label
-
         g.nodes[node]["color"] = COLORS.get(ntype)
         g.nodes[node]["size"] = node_size if ntype != "Topic" else max(node_size - 6, 8)
         
     # build network and load using from_nx()
     net = Network(height=f"{height}px", width="100%", bgcolor="#0F1117", font_color="#E8E8E8", directed=False)
     net.from_nx(g) # Translate nodes and edges
+
+     # Apply titles AFTER from_nx so they aren't overwritten
+    for pyvis_node in net.nodes:
+        nid = pyvis_node["id"]
+        if nid in node_titles:
+            pyvis_node["title"] = node_titles[nid]
 
     # Use physics thru barnes_hut()
     if physics: 
