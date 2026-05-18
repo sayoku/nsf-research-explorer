@@ -40,19 +40,30 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     for node, data in g.nodes(data=True):
         ntype = data.get("type", "")
 
+        # Build query-param deep link for this node
+        param_map = {"PI": "pi", "Institution": "institution", "Award": "award"}
+        tab_map   = {"PI": "PIs", "Institution": "Institutions", "Award": "Awards"}
+        
+        link_html = ""
+        if ntype in param_map:
+            import urllib.parse
+            params = urllib.parse.urlencode({param_map[ntype]: node})
+            url = f"{base_url}?{params}"
+            tab_label = tab_map[ntype]
+            link_html = f'<br><a href="{url}" target="_top" style="color:#7EB8F7;font-size:12px">→ View in {tab_label} tab</a>'
+
         # title, rendered as html on hover
-        lines = [f"{node}", f"Type: {ntype}", "---"]
+        lines = [f"<b>{node}</b>", f"<i>Type: {ntype}</i>", "<hr style='margin:4px 0'>"]
         for k, v in data.items():
             if k in ("type", "title", "label", "color", "size"):
                 continue
             if k == "abstract" and v:
                 chunk = str(v)[:300] + ("…" if len(str(v)) > 300 else "")
-                lines.append(f"{k}: {chunk}")
+                lines.append(f"<b>{k}:</b> {chunk}")
             elif k == "amount" and v:
-                lines.append(f"{k}: ${int(v):,}")
+                lines.append(f"<b>{k}:</b> ${int(v):,}")
             elif v:
-                lines.append(f"{k}: {v}")
-        g.nodes[node]["title"] = "\n".join(lines)
+                lines.append(f"<b>{k}:</b> {v}")
 
         # label, visible text on node
         label = node
