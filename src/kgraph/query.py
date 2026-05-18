@@ -267,35 +267,33 @@ class KGQueryAgent():
         """
         # Parse query
         parsed = self.parse_query(user_query)
-        # if parsed["operation"] == "error":
-        #     return None, parsed["explanation"], []
         
         # Do all the operations that are necessary. First is if there are multiple
         if "operations" in parsed: 
-            result_sets = []
-            for op in parsed["operations"]:
-                nodes = self.execute_ops(op["operation"], op["parameters"])
+            result_sets = [] # set of results lol
+            for op in parsed["operations"]: # for each op in the list of operations returned from claude
+                nodes = self.execute_ops(op["operation"], op["parameters"]) # execute the operation 
 
-                # If the op returned PIs, expand to their awards first
-                awards = set()
-                for n in nodes:
-                    node_data = self.graph.nodes[n]
+                # If the op returned PIs, expand to their awards first 
+                awards = set() 
+                for n in nodes: # with each node
+                    node_data = self.graph.nodes[n] # get the data of n 
                     if n.startswith("Award_"):
-                        awards.add(n)
-                    elif node_data.get('type') in ('PI', 'Institution', 'Topic'):
+                        awards.add(n) # add award n to set  
+                    elif node_data.get('type') in ('PI', 'Institution', 'Topic'): # it's not an award, so get the type
                         for neighbor in nx.neighbors(self.graph, n):
                             if neighbor.startswith("Award_"):
-                                awards.add(neighbor)
-                            # PIs connect to institutions, not awards directly
+                                awards.add(neighbor) # add the node's neighbors that are awards
+                            # PIs connect to institutions, not awards directly 
                             # go one step further from PI neighbors
-                            elif self.graph.nodes[neighbor].get('type') == 'PI':
-                                for neighbor2 in nx.neighbors(self.graph, neighbor):
+                            elif self.graph.nodes[neighbor].get('type') == 'PI': # if the next neighbor is of type PI 
+                                for neighbor2 in nx.neighbors(self.graph, neighbor): # grab the awards adjacent to PI
                                     if neighbor2.startswith("Award_"):
                                         awards.add(neighbor2)
                 result_sets.append(awards)
 
             # Intersect award sets, then re-expand to include neighbors
-            matching_awards = set.intersection(*result_sets) if result_sets else set()
+            matching_awards = set.intersection(*result_sets) if result_sets else set() # unpack list of sets, return empty if result_sets is empty
             nodes_of_interest = set(matching_awards)
             for award in matching_awards:
                 for neighbor in nx.neighbors(self.graph, award):
