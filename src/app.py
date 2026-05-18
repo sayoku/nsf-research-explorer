@@ -26,7 +26,7 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     except ImportError:
         return  "<p style='color:red'>pyvis is not installed. Run: pip install pyvis</p>"
 
-    import tempfile, pathlib, json
+    import tempfile, pathlib
 
     # Colors match current matplotlib colors, basic and highlighted 
     COLORS = {
@@ -36,12 +36,12 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         "Topic":       {"background": "#E37383", "border": "#B84055", "highlight": {"background": "#F0A0B0", "border": "#902030"}},
     }
     
-    PARAM_MAP = {"PI": "pi", "Institution": "institution", "Award": "award"}
+    #PARAM_MAP = {"PI": "pi", "Institution": "institution", "Award": "award"}
 
     # make a copy of the graph 
     g = graph.copy()
     node_titles = {} 
-    node_nav = {} # node ID goes to param key for click handler
+    #node_nav = {} # node ID goes to param key for click handler
 
     for node, data in g.nodes(data=True):
         ntype = data.get("type", "")
@@ -59,13 +59,6 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
                 lines.append(f"amount: ${int(v):,}")
             elif v:
                 lines.append(f"{k}: {v}")
-       
-        # Add click indication for clickable node types
-
-        if ntype in PARAM_MAP:
-            tab_label = {"PI": "PIs", "Institution": "Institutions", "Award": "Awards"}[ntype]
-            lines.append(f"\n► Click to view in {tab_label} tab")
-            node_nav[node] = PARAM_MAP[ntype]
         node_titles[node] = "\n".join(lines)
 
         # label, visible text on node
@@ -119,33 +112,8 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     }
     </style>
     """
-
-    # Click handler, use vis.js `network` global 
-    # Clicking a PI/Institution/Award node posts a message to the parent Streamlit page
-    click_script = f"""
-    <script>
-    var nodeNav = {json.dumps(node_nav)};
-    function attachClickHandler() {{
-        if (typeof network !== 'undefined') {{
-            network.on("click", function(params) {{
-                if (params.nodes.length > 0) {{
-                    var nodeId = params.nodes[0];
-                    var paramKey = nodeNav[nodeId];
-                    if (paramKey) {{
-                        window.parent.postMessage({{type: 'nsf_nav', key: paramKey, value: nodeId}}, '*');
-                    }}
-                }}
-            }});
-        }} else {{
-            setTimeout(attachClickHandler, 100);
-        }}
-    }}
-    setTimeout(attachClickHandler, 100);
-    </script>
-    """
     html = html.replace("</head>", tooltip_style + "</head>")
-    html = html.replace("</body>", click_script + "</body>")
-    return html 
+    return html
 
 # Configure page
 st.set_page_config(page_title="NSF Research Explorer", layout="wide")
@@ -172,24 +140,24 @@ if 'subgraph' not in st.session_state:
     st.session_state.subgraph = None  
 
 # Read deep-link query params from node clicks
-params = st.query_params
-deep_pi   = params.get("pi", None)
-deep_inst = params.get("institution", None)
+# params = st.query_params
+# deep_pi   = params.get("pi", None)
+# deep_inst = params.get("institution", None)
 
-components.html("""
-<script>
-window.addEventListener('message', function(e) {
-    if (e.data && e.data.type === 'nsf_nav') {
-        var key = e.data.key;
-        var value = e.data.value;
-        var url = new URL(window.parent.location.href);
-        url.searchParams.set(key, value);
-        window.parent.history.pushState({}, '', url);
-        window.parent.location.reload();
-    }
-});
-</script>
-""", height=0)
+# components.html("""
+# <script>
+# window.addEventListener('message', function(e) {
+#     if (e.data && e.data.type === 'nsf_nav') {
+#         var key = e.data.key;
+#         var value = e.data.value;
+#         var url = new URL(window.parent.location.href);
+#         url.searchParams.set(key, value);
+#         window.parent.history.pushState({}, '', url);
+#         window.parent.location.reload();
+#     }
+# });
+# </script>
+# """, height=0)
 
 # Add sidebar for query
 with st.sidebar:
@@ -284,9 +252,9 @@ if st.session_state.loaded == True:
 
         # If there are PI's, 
         if pis:
-            default_pi_idx = pis.index(deep_pi) if deep_pi in pis else 0
-            selected_pi = st.selectbox("Select a PI:", pis, index=default_pi_idx)
-
+            #default_pi_idx = pis.index(deep_pi) if deep_pi in pis else 0
+            #selected_pi = st.selectbox("Select a PI:", pis, index=default_pi_idx)
+            selected_pi = st.selectbox("Select a PI:", pis)
 
             if selected_pi:
                 st.subheader(f"Awards for {selected_pi}")
@@ -312,9 +280,9 @@ if st.session_state.loaded == True:
 
         # If there are insitutions, 
         if institutions:
-            default_inst_idx = institutions.index(deep_inst) if deep_inst in institutions else 0
-            selected_inst = st.selectbox("Select an Institution:", institutions, index=default_inst_idx)
-
+            #default_inst_idx = institutions.index(deep_inst) if deep_inst in institutions else 0
+            #selected_inst = st.selectbox("Select an Institution:", institutions, index=default_inst_idx)
+            selected_inst = st.selectbox("Select an Institution:", institutions)
 
             if selected_inst:
                 st.subheader(f"PI's at {selected_inst}")
