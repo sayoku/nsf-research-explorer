@@ -65,6 +65,8 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
                 lines.append(f"<b>{k}:</b> ${int(v):,}")
             elif v:
                 lines.append(f"<b>{k}:</b> {v}")
+        lines.append(link_html)
+        node_titles[node] = "<br>".join(lines)  
 
         # label, visible text on node
         label = node
