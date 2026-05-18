@@ -48,25 +48,25 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
 
         # build hover tooltip in html 
         # title, rendered as html on hover
-        lines = [f"<b>{node}</b>", f"<i>Type: {ntype}</i>", "<hr style='margin:4px 0'>"]
+        lines = [f"{node}", f"Type: {ntype}", "---"]
         for k, v in data.items():
             if k in ("type", "title", "label", "color", "size"):
                 continue
             if k == "abstract" and v:
-                chunk = str(v)[:300] + ("…" if len(str(v)) > 300 else "")
-                lines.append(f"<b>{k}:</b> {chunk}")
+                chunk = str(v)[:200] + ("…" if len(str(v)) > 200 else "")
+                lines.append(f"abstract: {chunk}")
             elif k == "amount" and v:
-                lines.append(f"<b>{k}:</b> ${int(v):,}")
+                lines.append(f"amount: ${int(v):,}")
             elif v:
-                lines.append(f"<b>{k}:</b> {v}")
+                lines.append(f"{k}: {v}")
        
         # Add click indication for clickable node types
 
-        if ntype in PARAM_MAP: 
+        if ntype in PARAM_MAP:
             tab_label = {"PI": "PIs", "Institution": "Institutions", "Award": "Awards"}[ntype]
-            lines.append(f"<br><i style='color:#aaa;font-size:11px'>Click to view in {tab_label} tab</i>")
+            lines.append(f"\n► Click to view in {tab_label} tab")
             node_nav[node] = PARAM_MAP[ntype]
-        node_titles[node] = "<br>".join(lines)
+        node_titles[node] = "\n".join(lines)
 
         # label, visible text on node
         label = node
