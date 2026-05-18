@@ -13,10 +13,11 @@ from kgraph.mem import KGBuilder
 from kgraph.query import KGQueryAgent 
 
 # pyvis integrates with networkx
-def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, node_size: int = 20, base_url: str = "") -> str:
+def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, node_size: int = 20) -> str:
     """
     Convert a networkx graph to a pvis html string
     Node colors correspond to type, clicking a node shows all attributes
+    Clicking a PI, Insitution, or Award node navigates to the corresponding tab
     Returns full HTML string for st.components.v1.html()
     """
     # Import pyvis
@@ -25,7 +26,7 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     except ImportError:
         return  "<p style='color:red'>pyvis is not installed. Run: pip install pyvis</p>"
 
-    import tempfile, pathlib
+    import tempfile, pathlib, json
 
     # Colors match current matplotlib colors, basic and highlighted 
     COLORS = {
@@ -35,24 +36,17 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         "Topic":       {"background": "#E37383", "border": "#B84055", "highlight": {"background": "#F0A0B0", "border": "#902030"}},
     }
     
+    PARAM_MAP = {"PI": "pi", "Institution": "institution", "Award": "award"}
+
     # make a copy of the graph 
     g = graph.copy()
     node_titles = {} 
+    node_nav = {} # node ID goes to param key for click handler
+
     for node, data in g.nodes(data=True):
         ntype = data.get("type", "")
 
-        # Build query-param deep link for this node
-        param_map = {"PI": "pi", "Institution": "institution", "Award": "award"}
-        tab_map   = {"PI": "PIs", "Institution": "Institutions", "Award": "Awards"}
-        
-        link_html = ""
-        if ntype in param_map:
-            import urllib.parse
-            params = urllib.parse.urlencode({param_map[ntype]: node})
-            url = f"{base_url}?{params}"
-            tab_label = tab_map[ntype]
-            link_html = f'<br><a href="{url}" target="_top" style="color:#7EB8F7;font-size:12px">→ View in {tab_label} tab</a>'
-
+        # build hover tooltip in html 
         # title, rendered as html on hover
         lines = [f"<b>{node}</b>", f"<i>Type: {ntype}</i>", "<hr style='margin:4px 0'>"]
         for k, v in data.items():
@@ -65,8 +59,14 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
                 lines.append(f"<b>{k}:</b> ${int(v):,}")
             elif v:
                 lines.append(f"<b>{k}:</b> {v}")
-        lines.append(link_html)
-        node_titles[node] = "<br>".join(lines)  
+       
+        # Add click indication for clickable node types
+
+        if ntype in PARAM_MAP: 
+            tab_label = {"PI": "PIs", "Institution": "Institutions", "Award": "Awards"}[ntype]
+            lines.append(f"<br><i style='color:#aaa;font-size:11px'>Click to view in {tab_label} tab</i>")
+            node_nav[node] = PARAM_MAP[ntype]
+        node_titles[node] = "<br>".join(lines)
 
         # label, visible text on node
         label = node
@@ -102,7 +102,26 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     net.save_graph(tmp_path)
     html = pathlib.Path(tmp_path).read_text(encoding="utf-8")
     os.unlink(tmp_path)
-    return html
+
+    # Click handler, use vis.js `network` global 
+    # Clicking a PI/Institution/Award node posts a message to the parent Streamlit page
+    click_script = f"""
+    <script>
+    var nodeNav = {json.dumps(node_nav)};
+    network.on("click", function(params) {{
+        if (params.nodes.length > 0) {{
+            var nodeId = params.nodes[0];
+            var paramKey = nodeNav[nodeId];
+            if (paramKey) {{
+                window.parent.postMessage({{type: 'nsf_nav', key: paramKey, value: nodeId}}, '*');
+            }}
+        }}
+    }});
+    </script>
+    """
+
+    html = html.replace("</body>", click_script + "</body>")
+    return html 
 
 # Configure page
 st.set_page_config(page_title="NSF Research Explorer", layout="wide")
@@ -127,6 +146,26 @@ if 'loaded' not in st.session_state:
     st.session_state.loaded = False
 if 'subgraph' not in st.session_state:          
     st.session_state.subgraph = None  
+
+# Read deep-link query params from node clicks
+params = st.query_params
+deep_pi   = params.get("pi", None)
+deep_inst = params.get("institution", None)
+
+components.html("""
+<script>
+window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'nsf_nav') {
+        var key = e.data.key;
+        var value = e.data.value;
+        var url = new URL(window.parent.location.href);
+        url.searchParams.set(key, value);
+        window.parent.history.pushState({}, '', url);
+        window.parent.location.reload();
+    }
+});
+</script>
+""", height=0)
 
 # Add sidebar for query
 with st.sidebar:
@@ -163,6 +202,7 @@ with st.sidebar:
     if st.button("Reset Graph", type="secondary"):
         st.session_state.kg = KGBuilder()
         st.session_state.loaded = False
+        st.query_params.clear()
         st.success("Graph cleared!")
 
     if st.button("Send snow!"):
@@ -220,7 +260,8 @@ if st.session_state.loaded == True:
 
         # If there are PI's, 
         if pis:
-            selected_pi = st.selectbox("Select a PI:", pis)
+            default_pi_idx = pis.index(deep_pi) if deep_pi in pis else 0
+            selected_pi = st.selectbox("Select a PI:", pis, index=default_pi_idx)
 
 
             if selected_pi:
@@ -247,7 +288,8 @@ if st.session_state.loaded == True:
 
         # If there are insitutions, 
         if institutions:
-            selected_inst = st.selectbox("Select an Institution:", institutions)
+            default_inst_idx = institutions.index(deep_inst) if deep_inst in institutions else 0
+            selected_inst = st.selectbox("Select an Institution:", institutions, index=default_inst_idx)
 
 
             if selected_inst:
