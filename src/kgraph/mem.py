@@ -259,20 +259,11 @@ class KGBuilder():
                     self.graph.add_node(copi_name, type='Co-PI', name=copi_name)
  
             # copi & award 
-            self.graph.add_edge(
-                copi_name, award_node,
-                relationship='co_investigates'
-            )
+            self.graph.add_edge(copi_name, f"Award_{award_id}", relationship='co_investigates')
             # copi and Institution (same award inst)
-            self.graph.add_edge(
-                copi_name, institution,
-                relationship='affiliated_with'
-            )
+            self.graph.add_edge(copi_name, institution, relationship='affiliated_with')
             # copi collaboration edge
-            self.graph.add_edge(
-                pi_name, copi_name,
-                relationship='collaborates_with'
-            )
+            self.graph.add_edge(pi_name, copi_name, relationship='collaborates_with')
 
         # Extract topic and keywords using extract_keywords
         keywords = self.extract_keywords(abstract)

@@ -116,7 +116,7 @@ class KGQueryAgent():
         )
         # This is the raw response
         response_raw = message.content[0].text
-        response = ""
+        response = response_raw
         # Take the json and find the start and end to the information we want
         if "```json" in response_raw:
             start = response_raw.find("```json") + 7
@@ -347,14 +347,14 @@ class KGQueryAgent():
                 for n in nodes: # with each node
                     node_data = self.graph.nodes[n] # get the data of n 
                     if n.startswith("Award_"):
-                        awards.add(n) # add award n to set  
+                        awards.add(n)
                     elif node_data.get('type') in ('PI', 'Co-PI', 'Institution', 'Topic'): # it's not an award, so get the type
                         for neighbor in nx.neighbors(self.graph, n):
                             if neighbor.startswith("Award_"):
                                 awards.add(neighbor) # add the node's neighbors that are awards
                             # PIs connect to institutions, not awards directly 
                             # go one step further from PI neighbors
-                            elif self.graph.nodes[neighbor].get('type') == 'PI' or 'Co-PI': # if the next neighbor is of type PI 
+                            elif self.graph.nodes[neighbor].get('type') in ('PI', 'Co-PI'): # if the next neighbor is of type PI 
                                 for neighbor2 in nx.neighbors(self.graph, neighbor): # grab the awards adjacent to PI
                                     if neighbor2.startswith("Award_"):
                                         awards.add(neighbor2)
