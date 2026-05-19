@@ -391,6 +391,7 @@ class KGBuilder():
     def get_deduplication_stats(self):
         return {
             'unique_pis': len(self.pi_names),
+            'unique_copis': len(self.copi_names),
             'unique_institutions': len(self.institution_names),
             'unique_awards': len(self.award_ids),
             'total_nodes': nx.number_of_nodes(self.graph),
