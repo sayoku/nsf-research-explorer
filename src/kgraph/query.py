@@ -51,6 +51,8 @@ class KGQueryAgent():
         5. find_by_amount: Find awards within a funding range
         6. find_pi_awards: Find all awards for a specific PI
         7. find_institution_pis: Find all PIs at an institution
+        8. find_copi_awards: Find all awards where a specific person is a co-investigator
+        9. find_collaborators: Find all collaborators (PIs and COPIs) of a specific person
 
         Output ONLY a JSON object with this structure:
         {
@@ -75,6 +77,12 @@ class KGQueryAgent():
 
         Query: "Awards over $500,000"
         Output: {"operation": "find_by_amount", "parameters": {"min_amount": 500000}, "explanation": "Finding awards with funding over $500,000"}
+
+        Query: "Who are the co-investigators on award 1234567?"
+        Output: {"operation": "find_award_copis", "parameters": {"award_id": "1234567"}, "explanation": "Finding all co-PIs on award 1234567"}
+        
+        Query: "Who has John Smith collaborated with?"
+        Output: {"operation": "find_collaborators", "parameters": {"person_name": "john smith"}, "explanation": "Finding all collaborators of John Smith"}
 
         Query: "Water research at Vanderbilt"
         Output: 
@@ -238,6 +246,61 @@ class KGQueryAgent():
         # Get all neighbors
         return self.find_neighbors(inst_node, max_depth=1) # Just the PI 
     
+    # Operation 8 
+    def find_copi_awards(self, copi_name: str) -> list:
+        """Find all awards where the person is a named copi"""
+        copi_node = None
+        for node in self.graph.nodes():
+            node_data = self.graph.nodes[node]
+            if (node_data.get('type') in ('Co-PI', 'PI') and
+                    copi_name.lower() in str(node).lower()):
+                copi_node = node
+                break
+
+        if not copi_node:
+            return []
+        
+        award_nodes = set()
+        for neighbor in nx.neighbors(self.graph, copi_node):
+            if neighbor.startswith('Award_'):
+                edge_data = self.graph.edges[copi_node, neighbor]
+                if edge_data.get('relationship') == 'co_investigates':
+                    award_nodes.add(neighbor)
+ 
+        all_nodes = {copi_node} | award_nodes
+        for award in award_nodes:
+            all_nodes.update(nx.neighbors(self.graph, award))
+        return list(all_nodes)
+
+    # Operation 9 
+    def find_collaborators(self, person_name: str) -> list:
+        """Find all people a given person as collaborated with"""
+        person_node = None
+        for node in self.graph.nodes():
+            node_data = self.graph.nodes[node]
+            if (node_data.get('type') in ('PI', 'Co-PI') and
+                    person_name.lower() in str(node).lower()):
+                person_node = node
+                break
+        if not person_node:
+            return []
+        
+        collab_nodes = set()
+        for neighbor in nx.neighbors(self.graph, person_node):
+            edge_data = self.graph.edges[person_node, neighbor]
+            if edge_data.get('relationship') == 'collaborates_with':
+                collab_nodes.add(neighbor)
+ 
+        # Return the person, collaborators, and shared awards
+        all_nodes = {person_node} | collab_nodes
+        for collab in collab_nodes:
+            for neighbor in nx.neighbors(self.graph, collab):
+                if neighbor.startswith('Award_'):
+                    edge_data = self.graph.edges[collab, neighbor]
+                    if edge_data.get('relationship') in ('investigates', 'co_investigates'):
+                        all_nodes.add(neighbor)
+        return list(all_nodes)
+
     # Execute operations, since we end up with a json, I'm just going to do a bunch of if-elseifs 
     def execute_ops(self, operation: str, parameters:dict) -> list:
         # Returns nodes of interest in a list 
@@ -255,6 +318,11 @@ class KGQueryAgent():
             return self.find_pi_awards(parameters.get("pi_name", ""))
         elif operation == "find_institution_pis":
             return self.find_institution_pis(parameters.get("institution", ""))
+        elif operation == "find_copi_awards":                          
+            return self.find_copi_awards(parameters.get("copi_name", ""))
+        elif operation == "find_collaborators":                        
+            return self.find_collaborators(parameters.get("person_name", ""))
+        
         else:     
             return []
     
@@ -280,13 +348,13 @@ class KGQueryAgent():
                     node_data = self.graph.nodes[n] # get the data of n 
                     if n.startswith("Award_"):
                         awards.add(n) # add award n to set  
-                    elif node_data.get('type') in ('PI', 'Institution', 'Topic'): # it's not an award, so get the type
+                    elif node_data.get('type') in ('PI', 'Co-PI', 'Institution', 'Topic'): # it's not an award, so get the type
                         for neighbor in nx.neighbors(self.graph, n):
                             if neighbor.startswith("Award_"):
                                 awards.add(neighbor) # add the node's neighbors that are awards
                             # PIs connect to institutions, not awards directly 
                             # go one step further from PI neighbors
-                            elif self.graph.nodes[neighbor].get('type') == 'PI': # if the next neighbor is of type PI 
+                            elif self.graph.nodes[neighbor].get('type') == 'PI' or 'Co-PI': # if the next neighbor is of type PI 
                                 for neighbor2 in nx.neighbors(self.graph, neighbor): # grab the awards adjacent to PI
                                     if neighbor2.startswith("Award_"):
                                         awards.add(neighbor2)

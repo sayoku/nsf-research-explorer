@@ -30,6 +30,7 @@ class KGBuilder():
 
         # Deduplication sets 
         self.pi_names = set()
+        self.copi_names = set()
         self.institution_names = set()
         self.award_ids = set()
 
@@ -64,6 +65,67 @@ class KGBuilder():
         normalized = normalized.title()
 
         return normalized
+    
+    def parse_copi_names(self, raw_copi):
+        """
+        Parse coPI field into a list of normalized co-investigator strings
+
+        Args: 
+            String/List of Dicts - raw_copi
+        Returns:
+            List[str]: normalized coPI's 
+        """
+        if not raw_copi:
+            return []
+        names = []
+        # For dict response
+        if isinstance(raw_copi, list):
+            for entry in raw_copi:
+                if isinstance(entry, dict):
+                    # Try common key variants
+                    raw = (entry.get('pdPIName') or entry.get('firstName', '') + ' ' +
+                           entry.get('lastName', '')).strip()
+                else:
+                    raw = str(entry)
+                normalized = self.normalize_name(raw)
+                if normalized:
+                    names.append(normalized)
+            return names
+        # String response
+        raw_str = str(raw_copi).strip()
+        if not raw_str:
+            return []
+        # Prefer semicolon delimiter (NSF often uses it between people)
+        if ';' in raw_str:
+            parts = raw_str.split(';')
+        else:
+            # "LASTNAME FIRSTNAME" (no embedded comma) vs "Last, First" style.
+            # if whole string has an even number of commas and each pair forms "Last, First", otherwise split directly
+            parts = [p.strip() for p in raw_str.split(',')]
+            # recombine "Last, First" pairs into single names
+            # alternating cap-word, cap-word → treat as Last/First pairs
+            rejoined = []
+            i = 0
+            while i < len(parts):
+                token = parts[i].strip()
+                if (i + 1 < len(parts) and
+                        token and token[0].isupper() and
+                        parts[i + 1].strip() and parts[i + 1].strip()[0].isupper() and
+                        len(token.split()) == 1 and len(parts[i + 1].strip().split()) == 1):
+                    # Looks like "LAST, FIRST" pair
+                    rejoined.append(token + ' ' + parts[i + 1].strip())
+                    i += 2
+                else:
+                    rejoined.append(token)
+                    i += 1
+            parts = rejoined
+ 
+        for part in parts:
+            normalized = self.normalize_name(part.strip())
+            if normalized:
+                names.append(normalized)
+ 
+        return names
 
     def extract_keywords_ner(self, text): 
         """
@@ -145,8 +207,12 @@ class KGBuilder():
         start_date = award.get('startDate', 'N/A')
         abstract = award.get('abstractText', '')
 
+        # coPI key varies slightly
+        raw_copi = (award.get('coPDPI') or award.get('coPIName') or award.get('coPI') or award.get('coPrincipalInvestigator'))
+
         # Normalize names 
         pi_name = self.normalize_name(raw_pi_name)
+        copi_names = self.parse_copi_names(raw_copi)
         institution = self.normalize_name(raw_institution)
 
         # Skip if award already exists
@@ -162,7 +228,8 @@ class KGBuilder():
             program = program,
             amount = amount,
             start_date = start_date,
-            abstract = abstract
+            abstract = abstract, 
+            copi_count = len(copi_names)
         )
         # Add PI Node
         if pi_name not in self.pi_names:
@@ -178,6 +245,34 @@ class KGBuilder():
         self.graph.add_edge(pi_name, f"Award_{award_id}", relationship='investigates')
         self.graph.add_edge(institution, f"Award_{award_id}", relationship='hosts')
         self.graph.add_edge(pi_name, institution, relationship='affiliated_with')
+
+        # Add copi Node + edges 
+        for copi_name in copi_names:
+            if not copi_name or copi_name == pi_name:
+                continue   # skip blank
+ 
+            # Add copi node 
+            if copi_name not in self.copi_names:
+                self.copi_names.add(copi_name)
+                # If the same person is both PI and copi on different awards we keep existing node but keep its type as PI 
+                if copi_name not in self.pi_names:
+                    self.graph.add_node(copi_name, type='Co-PI', name=copi_name)
+ 
+            # copi & award 
+            self.graph.add_edge(
+                copi_name, award_node,
+                relationship='co_investigates'
+            )
+            # copi and Institution (same award inst)
+            self.graph.add_edge(
+                copi_name, institution,
+                relationship='affiliated_with'
+            )
+            # copi collaboration edge
+            self.graph.add_edge(
+                pi_name, copi_name,
+                relationship='collaborates_with'
+            )
 
         # Extract topic and keywords using extract_keywords
         keywords = self.extract_keywords(abstract)
@@ -236,6 +331,7 @@ class KGBuilder():
 
         # Print deduplication stats
         print(f"Unique PIs: {len(self.pi_names)}")
+        print(f"Unique Co-PIs: {len(self.copi_names)}")          
         print(f"Unique Institutions: {len(self.institution_names)}")
         print(f"Unique Awards: {len(self.award_ids)}")
 
@@ -250,6 +346,32 @@ class KGBuilder():
         # Get the neighbors of the PI node which start with "Award_"
         return [n for n in nx.neighbors(self.graph, pi_name)
             if n.startswith('Award_')]
+
+    def get_copi_awards(self, copi_name):
+        """Get all awards where this person is a co-pi."""
+        # in case there is are no copi's
+        if copi_name not in self.graph:
+            return []
+        
+        award_nodes = []
+        for n in nx.neighbors(self.graph, copi_name):
+            if n.startswith('Award_'):
+                edge_data = self.graph.edges[copi_name, n]
+                if edge_data.get('relationship') == 'co_investigates':
+                    award_nodes.append(n)
+        return award_nodes
+    
+    def get_collaborators(self, pi_name):             
+        """Get all people (pi/copi) this person has collaborated with."""
+        if pi_name not in self.graph:
+            return []
+        collabs = []
+        # Pull everyone with a collaborative relationship 
+        for n in nx.neighbors(self.graph, pi_name):
+            edge_data = self.graph.edges[pi_name, n]
+            if edge_data.get('relationship') == 'collaborates_with':
+                collabs.append(n)
+        return collabs
 
     def get_institution_pis(self, institution_name): 
         """
