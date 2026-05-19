@@ -31,6 +31,7 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     # Colors match current matplotlib colors, basic and highlighted 
     COLORS = {
         "PI":          {"background": "#CF9FFF", "border": "#9B59D0", "highlight": {"background": "#E0C0FF", "border": "#7B3FB0"}},
+        "Co-PI":       {"background": "#FFB347", "border": "#CC7A00", "highlight": {"background": "#FFD080", "border": "#AA6000"}},
         "Institution": {"background": "#4ECDC4", "border": "#2BA39B", "highlight": {"background": "#80E8E2", "border": "#1A8077"}},
         "Award":       {"background": "#6495ED", "border": "#3A6BC0", "highlight": {"background": "#A0B8F5", "border": "#2A55A0"}},
         "Topic":       {"background": "#E37383", "border": "#B84055", "highlight": {"background": "#F0A0B0", "border": "#902030"}},
@@ -57,6 +58,8 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
                 lines.append(f"abstract: {chunk}")
             elif k == "amount" and v:
                 lines.append(f"amount: ${int(v):,}")
+            elif k == "copi_count" and v:
+                lines.append(f"co-investigators: {v}")
             elif v:
                 lines.append(f"{k}: {v}")
         node_titles[node] = "\n".join(lines)
@@ -202,6 +205,7 @@ with st.sidebar:
 
     st.header("Subgraph Query")
     nl_query = st.text_input("Ask about the graph:", placeholder="e.g., Show water research")
+    
     if st.button("Query Graph"):
         agent = KGQueryAgent(st.session_state.kg.graph)
         subgraph, explanation, nodes = agent.subquery(nl_query)
@@ -224,7 +228,7 @@ if st.session_state.loaded == True:
         # Get stats and organize them into columns
         stats = st.session_state.kg.get_deduplication_stats()
 
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
             st.metric("Total Nodes", nx.number_of_nodes(st.session_state.kg.graph))
         with col2:
@@ -235,6 +239,8 @@ if st.session_state.loaded == True:
             st.metric("Graph Density", f"{density:.4f}")
         with col4:
             st.metric("Unique PIs", stats['unique_pis'])
+        with col5: 
+            st.metric("Unique Co-PIs", stats['unique_copis'])
 
         st.subheader("Node type breakdown")
         # Use get_graph_info to get counts of types
@@ -249,28 +255,59 @@ if st.session_state.loaded == True:
         # Get all PI's from the graph
         node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
         pis = [node for node, node_type in node_types.items() if node_type == 'PI']
+        copis = [node for node, node_type in node_types.items() if node_type == 'Co-PI']
 
-        # If there are PI's, 
-        if pis:
-            #default_pi_idx = pis.index(deep_pi) if deep_pi in pis else 0
-            #selected_pi = st.selectbox("Select a PI:", pis, index=default_pi_idx)
-            selected_pi = st.selectbox("Select a PI:", pis)
+        pi_tab, copi_tab = st.tabs([f"Lead PIs ({len(pis)})", f"Co-PIs ({len(copis)})"])
 
-            if selected_pi:
-                st.subheader(f"Awards for {selected_pi}")
-                awards = st.session_state.kg.get_pi_awards(selected_pi)
+        with pi_tab: 
+            # If there are PI's, 
+            if pis:
+                #default_pi_idx = pis.index(deep_pi) if deep_pi in pis else 0
+                #selected_pi = st.selectbox("Select a PI:", pis, index=default_pi_idx)
+                selected_pi = st.selectbox("Select a PI:", pis)
 
-                if awards:
-                    st.write(f"**Total Awards:** {len(awards)}")
-                    for award in awards:
-                        with st.expander(f"{award}"):
-                            award_data = st.session_state.kg.graph.nodes[award]
+                if selected_pi:
+                    st.subheader(f"Awards for {selected_pi}")
+                    awards = st.session_state.kg.get_pi_awards(selected_pi)
+
+                    if awards:
+                        st.write(f"**Total Awards:** {len(awards)}")
+                        for award in awards:
+                            with st.expander(f"{award}"):
+                                award_data = st.session_state.kg.graph.nodes[award]
+                                st.write(f"**Program:** {award_data.get('program', 'N/A')}")
+                                st.write(f"**Amount:** {award_data.get('amount', 0)}")
+                                st.write(f"**Start Date:** {award_data.get('start_date', 'N/A')}")
+                                st.write(f"**Abstract:** {award_data.get('abstract', 'N/A')}")
+                    else:
+                        st.info("No awards found for this PI")
+        with copi_tab: 
+            if copis: 
+                selected_copi = st.selectbox("Select a Co-PI:", copis)
+                if selected_copi:
+                    st.subheader(f"Awards where {selected_copi} is a Co-PI")
+                    copi_awards = st.session_state.kg.get_copi_awards(selected_copi)
+                    collaborators = st.session_state.kg.get_collaborators(selected_copi)
+ 
+                    col_a, col_b = st.columns(2)
+                    col_a.metric("Co-PI Awards", len(copi_awards))
+                    col_b.metric("Collaborators", len(collaborators))
+ 
+                    for award in copi_awards:
+                        award_data = st.session_state.kg.graph.nodes[award]
+                        with st.expander(award):
                             st.write(f"**Program:** {award_data.get('program', 'N/A')}")
-                            st.write(f"**Amount:** {award_data.get('amount', 0)}")
+                            st.write(f"**Amount:** ${int(award_data.get('amount', 0)):,}")
                             st.write(f"**Start Date:** {award_data.get('start_date', 'N/A')}")
                             st.write(f"**Abstract:** {award_data.get('abstract', 'N/A')}")
-                else:
-                    st.info("No awards found for this PI")
+ 
+                    if collaborators:
+                        st.subheader("Collaborators")
+                        st.write(", ".join(collaborators))
+            else:
+                st.info("No co-investigators found in the current graph. "
+                        "Co-PI data depends on NSF API availability for the loaded awards.")
+        
     # tab3
     with tab3:
         st.header("Institutions")
