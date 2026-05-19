@@ -61,6 +61,12 @@ class KGBuilder():
         normalized = name.lower().strip().replace('+', ' ')
         # Remove extra whitespace in the middle of string if any
         normalized = ' '.join(normalized.split())
+        
+        # Strip email addresses off copi names
+        parts = normalized.split()
+        parts = [p for p in parts if '@' not in p]
+        normalized = ' '.join(parts)
+
         # Title case 
         normalized = normalized.title()
 
