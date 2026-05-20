@@ -96,6 +96,7 @@ class NSFAgent:
             4. Dates are formatted as MM/DD/YYYY
             5. Convert descriptions to integers (ex: over 1 million = 1000000)
             6. If the query is unclear or impossible, output: {"error": "description of issue"}
+            7. awardeeName values must be wrapped in double quotes for exact matching (e.g. "ohio+state+university" → the value should be '"ohio+state+university"')
 
         Now translate the user's query into NSF API parameters.
         
