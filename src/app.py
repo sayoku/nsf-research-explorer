@@ -363,10 +363,10 @@ if st.session_state.loaded == True:
 
         st.markdown(
             """ 
-            Hover over a node to see details<br>
-            Drag nodes to rearrange<br>
-            Scroll to zoom<br>
-            Click and drag the canvas to pan
+            * **Hover** over a node to see details
+            * **Drag** nodes to rearrange
+            * **Scroll** to zoom
+            * **Click and drag** the canvas to pan
             """
         )        
 
