@@ -237,10 +237,7 @@ class KGBuilder():
             abstract = abstract, 
             copi_count = len(copi_names)
         )
-
-        import sys
-        print(f"[DEBUG] Award {award_id}: pdPIName={award.get('pdPIName')!r}, coPDPI={award.get('coPDPI')!r}")
-
+        
         # Add PI Node
         if pi_name not in self.pi_names:
             self.pi_names.add(pi_name)
