@@ -233,16 +233,24 @@ class KGQueryAgent():
     # Operation 7
     def find_institution_pis(self, institution_name: str) -> list:
         """Find all PIs at an institution."""
-        inst_node = None # Find instiution node 
+        pattern = institution_name.lower()
+
+        # Collect all matching institution nodes, going by quality
+        matches = []
         for node in self.graph.nodes():
             node_data = self.graph.nodes[node]
-            if node_data.get('type') == 'Institution' and institution_name.lower() in str(node).lower():
-                inst_node = node
-                break
-        
-        if not inst_node:
+            if node_data.get('type') == 'Institution':
+                node_lower = str(node).lower()
+                if pattern in node_lower:
+                    # Prefer shorter names (more specific matches rank higher)
+                    matches.append((len(node_lower), node))
+    
+        if not matches:
             return []
         
+        matches.sort()
+        inst_node = matches[0][1]
+
         # Get all neighbors
         return self.find_neighbors(inst_node, max_depth=1) # Just the PI 
     
