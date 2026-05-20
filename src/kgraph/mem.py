@@ -68,7 +68,14 @@ class KGBuilder():
         normalized = ' '.join(parts)
 
         # Title case 
-        normalized = normalized.title()
+        original_parts = [p for p in name.strip().replace('+', ' ').split() if '@' not in p]
+        if (len(original_parts) >= 2 and
+                all(p.isupper() or len(p) == 1 for p in original_parts)):
+            parts = normalized.split()
+            # Move first word (last name) to end: GULL EMANUEL C → Emanuel C Gull
+            normalized = ' '.join(parts[1:] + parts[:1])
+
+        # Reoder to first-last name 
 
         return normalized
     
@@ -237,6 +244,10 @@ class KGBuilder():
             abstract = abstract, 
             copi_count = len(copi_names)
         )
+
+        import sys
+        print(f"[DEBUG] Award {award_id}: pdPIName={award.get('pdPIName')!r}, coPDPI={award.get('coPDPI')!r}", file=sys.stderr)
+
         # Add PI Node
         if pi_name not in self.pi_names:
             self.pi_names.add(pi_name)
@@ -258,18 +269,21 @@ class KGBuilder():
                 continue   # skip blank
  
             # Add copi node 
-            if copi_name not in self.copi_names:
+            if copi_name not in self.copi_names and copi_name not in self.pi_names:
                 self.copi_names.add(copi_name)
+                self.graph.add_node(copi_name, type='Co-PI', name=copi_name)
                 # If the same person is both PI and copi on different awards we keep existing node but keep its type as PI 
-                if copi_name not in self.pi_names:
-                    self.graph.add_node(copi_name, type='Co-PI', name=copi_name)
+            elif copi_name not in self.pi_names:
+                # PI somewhere else, just track name 
+                self.copi_names.add(copi_name)
  
-            # copi & award 
-            self.graph.add_edge(copi_name, f"Award_{award_id}", relationship='co_investigates')
-            # copi and Institution (same award inst)
-            self.graph.add_edge(copi_name, institution, relationship='affiliated_with')
-            # copi collaboration edge
-            self.graph.add_edge(pi_name, copi_name, relationship='collaborates_with')
+            if copi_name != pi_name: 
+                # copi & award 
+                self.graph.add_edge(copi_name, f"Award_{award_id}", relationship='co_investigates')
+                # copi and Institution (same award inst)
+                self.graph.add_edge(copi_name, institution, relationship='affiliated_with')
+                # copi collaboration edge
+                self.graph.add_edge(pi_name, copi_name, relationship='collaborates_with')
 
         # Extract topic and keywords using extract_keywords
         keywords = self.extract_keywords(abstract)
