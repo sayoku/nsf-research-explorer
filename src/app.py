@@ -92,6 +92,15 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     else:
         net.toggle_physics(False)
 
+    net.set_options("""
+    {
+      "interaction": {
+        "hover": true,
+        "tooltipDelay": true
+      }
+    }
+    """)
+
     # generate html
     with tempfile.NamedTemporaryFile(suffix=".html", delete=False, mode="w") as f:
         tmp_path = f.name
@@ -109,7 +118,9 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         padding: 8px 10px !important;
         font-size: 13px !important;
         font-family: sans-serif !important;
-        max-width: 280px !important;
+        max-width: 420px !important;
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
         line-height: 1.5 !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
     }
