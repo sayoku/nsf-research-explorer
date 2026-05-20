@@ -67,14 +67,7 @@ class KGBuilder():
         parts = [p for p in parts if '@' not in p]
         normalized = ' '.join(parts)
 
-        # Reoder to first-last name 
-        original_parts = [p for p in name.strip().replace('+', ' ').split() if '@' not in p]
-        if (len(original_parts) >= 2 and
-                all(p.isupper() or len(p) == 1 for p in original_parts)):
-            parts = normalized.split()
-            # Move first word (last name) to end: GULL EMANUEL C → Emanuel C Gull
-            normalized = ' '.join(parts[1:] + parts[:1])
-        # Title case again
+        # Title case
         normalized = normalized.title()
 
         return normalized
