@@ -246,7 +246,7 @@ class KGBuilder():
         )
 
         import sys
-        print(f"[DEBUG] Award {award_id}: pdPIName={award.get('pdPIName')!r}, coPDPI={award.get('coPDPI')!r}", file=sys.stderr)
+        print(f"[DEBUG] Award {award_id}: pdPIName={award.get('pdPIName')!r}, coPDPI={award.get('coPDPI')!r}")
 
         # Add PI Node
         if pi_name not in self.pi_names:
