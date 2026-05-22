@@ -45,7 +45,7 @@ def query_nsf_api(params):
     """
     
     # base url
-    base_url = "http://api.nsf.gov/services/v1/awards.json?"
+    base_url = "https://api.nsf.gov/services/v1/awards.json?"
     
     # Requests library handles parameter formatting
     response = requests.get(base_url, params=params)
@@ -53,8 +53,20 @@ def query_nsf_api(params):
     if response.status_code != 200:
         print("Error upon querying, status code: " + str(response.status_code))
         return None
-    
-    root = ET.fromstring(response.content)
+   
+    # Guard against non-XML
+    raw = response.content
+    if not raw.strip().startswith(b'<'):
+        print(f"Unexpected non-XML response: {response.text[:500]}")
+        return None
+
+    # Better error handling
+    try:
+        root = ET.fromstring(raw)
+    except ET.ParseError as e:
+        print(f"XML ParseError: {e}")
+        print(f"Raw response (first 500 chars): {response.text[:500]}")
+        return None
 
     #metadata
     meta = root.find('metadata')
