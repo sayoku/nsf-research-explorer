@@ -61,7 +61,7 @@ class KGBuilder():
         name = name.strip().replace('+', ' ')
         
         # Strip email addresses off names ex: "Erik Fredericks frederer@gvsu.edu"
-        tokens = [t for t in name.split() if '@ not in t']
+        tokens = [t for t in name.split() if '@' not in t]
         name = ' '.join(tokens) # any other whitespace
         if not name: 
             return name
@@ -97,7 +97,7 @@ class KGBuilder():
         if isinstance(raw_copi, list):
             entries = [str(e).strip() for e in raw_copi if e]
         else: 
-            [e.strip() for e in str(raw_copi).split(';') if e.strip()]
+            entries = [e.strip() for e in str(raw_copi).split(';') if e.strip()]
 
         names = []
         for entry in entries: # dropping any email token
@@ -238,10 +238,11 @@ class KGBuilder():
             # Add copi node 
             if copi_name not in self.copi_names and copi_name not in self.pi_names:
                 self.copi_names.add(copi_name)
+                self.graph.add_node(copi_name, type='Co-PI', name=copi_name)
                 # If the same person is both PI and copi on different awards we keep existing node but keep its type as PI 
                 if copi_name not in self.pi_names:
                     # PI somewhere else, just track name 
-                    self.copi_names.add(copi_name, type='Co-PI', name=copi_name)
+                    self.copi_names.add(copi_name)
  
             # copi & award 
             self.graph.add_edge(copi_name, f"Award_{award_id}", relationship='co_investigates')

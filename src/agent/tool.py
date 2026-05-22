@@ -45,10 +45,10 @@ def query_nsf_api(params):
     """
     
     # base url
-    base_url = "https://api.nsf.gov/services/v1/awards.json?"
+    base_url = "https://api.nsf.gov/services/v1/awards.xml?"
     
     # Requests library handles parameter formatting
-    response = requests.get(base_url, params=params)
+    response = requests.get(base_url, params=params, timeout = 30)
     # If it was unsuccessful, 
     if response.status_code != 200:
         print("Error upon querying, status code: " + str(response.status_code))
