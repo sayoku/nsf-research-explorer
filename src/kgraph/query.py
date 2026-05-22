@@ -233,26 +233,27 @@ class KGQueryAgent():
     # Operation 7
     def find_institution_pis(self, institution_name: str) -> list:
         """Find all PIs at an institution."""
-        pattern = institution_name.lower()
 
-        # Collect all matching institution nodes, going by quality
-        matches = []
+        # Claude should deal with aliases before this function is called
+        SKIP = {'of', 'the', 'at', 'for', 'and', 'in', 'a'}
+        query_tokens = [t for t in institution_name.lower().split() if t not in SKIP]
+ 
+        best_node = None
+        best_score = 0
         for node in self.graph.nodes():
-            node_data = self.graph.nodes[node]
-            if node_data.get('type') == 'Institution':
-                node_lower = str(node).lower()
-                if pattern in node_lower:
-                    # Prefer shorter names (more specific matches rank higher)
-                    matches.append((len(node_lower), node))
-    
-        if not matches:
+            if self.graph.nodes[node].get('type') != 'Institution': #nab all the institutions
+                continue
+            node_lower = str(node).lower()
+            score = sum(1 for t in query_tokens if t in node_lower)
+            if score > best_score:
+                best_score = score
+                best_node = node
+ 
+        if not best_node or best_score == 0:
             return []
-        
-        matches.sort()
-        inst_node = matches[0][1]
 
         # Get all neighbors
-        return self.find_neighbors(inst_node, max_depth=1) # Just the PI 
+        return self.find_neighbors(best_node, max_depth=1) 
     
     # Operation 8 
     def find_copi_awards(self, copi_name: str) -> list:
