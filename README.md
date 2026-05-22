@@ -151,7 +151,6 @@ A web application that renders the connected data as a clickable network diagram
 - [ ] Multi-language support
 - [ ] Export functionality (PDF reports, CSV data)
 - [ ] Expand node click behavior to link to NSF award page
-- [ ] Add co-invesitgator relationships from award data
 
 ## License
 
