@@ -238,19 +238,17 @@ class KGBuilder():
             # Add copi node 
             if copi_name not in self.copi_names and copi_name not in self.pi_names:
                 self.copi_names.add(copi_name)
-                self.graph.add_node(copi_name, type='Co-PI', name=copi_name)
                 # If the same person is both PI and copi on different awards we keep existing node but keep its type as PI 
-            elif copi_name not in self.pi_names:
-                # PI somewhere else, just track name 
-                self.copi_names.add(copi_name)
+                if copi_name not in self.pi_names:
+                    # PI somewhere else, just track name 
+                    self.copi_names.add(copi_name, type='Co-PI', name=copi_name)
  
-            if copi_name != pi_name: 
-                # copi & award 
-                self.graph.add_edge(copi_name, f"Award_{award_id}", relationship='co_investigates')
-                # copi and Institution (same award inst)
-                self.graph.add_edge(copi_name, institution, relationship='affiliated_with')
-                # copi collaboration edge
-                self.graph.add_edge(pi_name, copi_name, relationship='collaborates_with')
+            # copi & award 
+            self.graph.add_edge(copi_name, f"Award_{award_id}", relationship='co_investigates')
+            # copi and Institution (same award inst)
+            self.graph.add_edge(copi_name, institution, relationship='affiliated_with')
+            # copi collaboration edge
+            self.graph.add_edge(pi_name, copi_name, relationship='collaborates_with')
 
         # Extract topic and keywords using extract_keywords
         keywords = self.extract_keywords(abstract)
