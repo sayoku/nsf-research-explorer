@@ -253,7 +253,7 @@ class KGQueryAgent():
             return []
 
         # Get all neighbors
-        return self.find_neighbors(best_node, max_depth=1) 
+        return self.find_neighbors(best_node, max_depth=3) 
     
     # Operation 8 
     def find_copi_awards(self, copi_name: str) -> list:
