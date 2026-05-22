@@ -94,8 +94,20 @@ class KGBuilder():
             return []
 
         # Normalize list of raw entries, multiple co-PIs separated by ; 
+        if isinstance(raw_copi, list):
+            entries = [str(e).strip() for e in raw_copi if e]
+        else: 
+            [e.strip() for e in str(raw_copi).split(';') if e.strip()]
 
- 
+        names = []
+        for entry in entries: # dropping any email token
+            tokens = [t for t in entry.split() if '@' not in t]
+            if not tokens:
+                continue
+            raw_name = ' '.join(tokens)
+            normalized = self.normalize_name(raw_name)
+            if normalized:
+                names.append(normalized)
         return names
 
     def extract_keywords_ner(self, text): 
