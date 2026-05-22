@@ -88,57 +88,12 @@ class KGBuilder():
         Args: 
             String/List of Dicts - raw_copi
         Returns:
-            List[str]: normalized coPI's 
+            List[str]: normalized coPI name strings
         """
         if not raw_copi:
             return []
-        names = []
-        # For dict response
-        if isinstance(raw_copi, list):
-            for entry in raw_copi:
-                if isinstance(entry, dict):
-                    # Try common key variants
-                    raw = (entry.get('pdPIName') or entry.get('firstName', '') + ' ' +
-                           entry.get('lastName', '')).strip()
-                else:
-                    raw = str(entry)
-                normalized = self.normalize_name(raw)
-                if normalized:
-                    names.append(normalized)
-            return names
-        # String response
-        raw_str = str(raw_copi).strip()
-        if not raw_str:
-            return []
-        # Prefer semicolon delimiter (NSF often uses it between people)
-        if ';' in raw_str:
-            parts = raw_str.split(';')
-        else:
-            # "LASTNAME FIRSTNAME" (no embedded comma) vs "Last, First" style.
-            # if whole string has an even number of commas and each pair forms "Last, First", otherwise split directly
-            parts = [p.strip() for p in raw_str.split(',')]
-            # recombine "Last, First" pairs into single names
-            # alternating cap-word, cap-word → treat as Last/First pairs
-            rejoined = []
-            i = 0
-            while i < len(parts):
-                token = parts[i].strip()
-                if (i + 1 < len(parts) and
-                        token and token[0].isupper() and
-                        parts[i + 1].strip() and parts[i + 1].strip()[0].isupper() and
-                        len(token.split()) == 1 and len(parts[i + 1].strip().split()) == 1):
-                    # Looks like "LAST, FIRST" pair
-                    rejoined.append(token + ' ' + parts[i + 1].strip())
-                    i += 2
-                else:
-                    rejoined.append(token)
-                    i += 1
-            parts = rejoined
- 
-        for part in parts:
-            normalized = self.normalize_name(part.strip())
-            if normalized:
-                names.append(normalized)
+
+
  
         return names
 
