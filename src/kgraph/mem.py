@@ -75,7 +75,7 @@ class KGBuilder():
             if (first and last and len(last.split()) <= 3 and not any(c.isdigit() for c in name)):
                 name = f"{first} {last}" # Here it is yippee
 
-        normalized = ' '.join(name.lower().split().title()) # lowercase, title case
+        normalized = ' '.join(name.lower().split()).title() # lowercase, title case
         # Title case
         normalized = normalized.title()
 
