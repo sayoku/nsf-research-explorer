@@ -344,7 +344,7 @@ if st.session_state.loaded == True:
                         # Use get_pi_awards to get award count for each PI
                         pi_awards = st.session_state.kg.get_pi_awards(pi)
                         
-                        with st.expander(f"👤 {pi} ({len(pi_awards)} award(s))"):
+                        with st.expander(f"👤 {pi}: {len(pi_awards)} award(s)"):
                             if pi_awards:
                                 for award in pi_awards:
                                     award_data = st.session_state.kg.graph.nodes[award]

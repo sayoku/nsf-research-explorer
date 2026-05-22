@@ -57,16 +57,25 @@ class KGBuilder():
         if not name or name == "Unknown PI" or name == "Unknown Institution":
             return name
         
-        # Convert lowercase, strip whitespace, replace + with space 
-        normalized = name.lower().strip().replace('+', ' ')
-        # Remove extra whitespace in the middle of string if any
-        normalized = ' '.join(normalized.split())
+        # Strip whitespace, replace + with space 
+        name = name.strip().replace('+', ' ')
         
-        # Strip email addresses off copi names
-        parts = normalized.split()
-        parts = [p for p in parts if '@' not in p]
-        normalized = ' '.join(parts)
+        # Strip email addresses off names ex: "Erik Fredericks frederer@gvsu.edu"
+        tokens = [t for t in name.split() if '@ not in t']
+        name = ' '.join(tokens) # any other whitespace
+        if not name: 
+            return name
 
+        # Looking for Last, First pattern, eg: Conger, Lauren or Garzella, Jack J
+        if ',' in name: 
+            parts = name.split(',', 1) # Split on first comma only, put them into array
+            last = parts[0].strip()
+            first = parts[1].strip()
+            # Reoder if neither looks like institution
+            if (first and last and len(last.split()) <= 3 and not any(c.isdigit() for c in name)):
+                name = f"{first} {last}" # Here it is yippee
+
+        normalized = ' '.join(name.lower().split().title()) # lowercase, title case
         # Title case
         normalized = normalized.title()
 
