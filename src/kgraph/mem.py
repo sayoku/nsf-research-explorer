@@ -93,6 +93,7 @@ class KGBuilder():
         if not raw_copi:
             return []
 
+        # Normalize list of raw entries, multiple co-PIs separated by ; 
 
  
         return names

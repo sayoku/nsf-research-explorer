@@ -1,5 +1,7 @@
 import requests
 import json
+import xml.etree.ElementTree as ET
+from collections import defaultdict
 from anthropic import Anthropic
 import os
 from dotenv import load_dotenv
@@ -22,6 +24,10 @@ if not api_key:
 Tool: Given a structured input, query the NSF API and output the data in a json. 
 """
 
+# Fields that legitimately appear multiple times in a single <award> block
+# and should always be returned as a list (even when only one tag is present).
+MULTI_FIELDS = {'coPDPI', 'pi', 'fundsObligated', 'primaryProgram', 'progRefCode'}
+
 def query_nsf_api(params):
     """
     Query the nsf api with the given parameters:
@@ -34,7 +40,7 @@ def query_nsf_api(params):
             "parameter":"value"
             }    
     Returns:
-        json response from the nsf api
+        dict matching the json response from the nsf api
 
     """
     
@@ -43,14 +49,43 @@ def query_nsf_api(params):
     
     # Requests library handles parameter formatting
     response = requests.get(base_url, params=params)
-    # If it was successful, 
-    if response.status_code == 200: 
-        # Returns a python dictionary 
-        return response.json()
-    else:
-        print("Error upon querying, status code: " + response.status_code)  
+    # If it was unsuccessful, 
+    if response.status_code != 200:
+        print("Error upon querying, status code: " + str(response.status_code))
         return None
     
+    root = ET.fromstring(response.content)
+
+    #metadata
+    meta = root.find('metadata')
+    metadata = {
+        "totalCount": int(meta.findtext('totalCount', '0')) if meta else 0,
+        "rpp": int(meta.findtext('rpp', '25')) if meta else 25,
+        "offset": int(meta.findtext('offset', '0')) if meta else 0,
+    }
+
+    #awards
+    awards = []
+    for award in root.findall('award'):
+        # Group children by tag, accumulate duplicates
+        tag_groups = defaultdict(list)
+        for child in award:
+            tag_groups[child.tag].append((child.text or '').strip())
+ 
+        award = {}
+        for tag, values in tag_groups.items():
+            if tag in MULTI_FIELDS:
+                # Always a list, filter blank entires
+                award[tag] = [v for v in values if v]
+            elif len(values) == 1:
+                award[tag] = values[0]   # single occurrence = plain string
+            else:
+                award[tag] = values      # unexpected duplicate = list
+        awards.append(award)
+ 
+    return {"response": {"metadata": metadata, "award": awards}}
+
+
 class NSFAgent: 
     """
     LLM Agent translating natural language into structures NSF API parameters (in a json dictionary)
@@ -123,6 +158,7 @@ class NSFAgent:
         # This is the raw response
         response_raw = message.content[0].text
         response = ""
+
         # Take the json and find the start and end to the information we want
         if "```json" in response_raw:
             start = response_raw.find("```json") + 7
@@ -176,6 +212,7 @@ class NSFAgent:
         """
         if not api_response: 
             return "No results found."
+        
         # Get the count and awards (in a list)
         total_count = api_response['response']['metadata'].get('totalCount',0)
         awards = api_response['response'].get('award', [])
@@ -238,10 +275,9 @@ def test_agent_accuracy():
             right += 1
             print("Success!")
             print(query)
+
     accuracy = right / len(test_cases) * 100
-
     print("Accuracy of translate_cases: " + str(accuracy) + "%")
-
     return accuracy
 
 # Testing query_nsf_api, also test the NSF Agent
