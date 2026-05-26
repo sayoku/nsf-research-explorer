@@ -141,9 +141,16 @@ class KGBuilder():
         # Extract noun chunks (concepts)
         for chunk in doc.noun_chunks:
             if chunk.root.pos_ in ('NOUN', 'PROPN'): 
-                chunk_text = chunk.text.strip().lower() # Again clean it up
-                if 3 < len(chunk_text) < 30 and len(chunk_text.split()) <= 3:
-                    keywords.add(chunk_text)
+                # filter individual tokens 
+                clean_tokens = [token.text for token in chunk
+                    if token.pos_ in ('NOUN', 'PROPN', 'ADJ') 
+                    and not token.is_stop and not token.is_punct 
+                    and len(token.text)> 2
+                ]
+                if clean_tokens: 
+                    chunk_text = ' '.join(clean_tokens).strip().lower()
+                    if 3 < len(chunk_text) < 40:
+                        keywords.add(chunk_text)
 
         return list(keywords)[:10]
      
