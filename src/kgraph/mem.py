@@ -127,7 +127,7 @@ class KGBuilder():
             List keywords : a list of keywords
         """
         if not text or not self.nlp:
-            return self.extract_keywords_simple(text)
+            return []
         
         doc = self.nlp(text[:2000])
         keywords = set()
@@ -175,10 +175,11 @@ class KGBuilder():
         Puts all keyword extraction together.
         Use NER if available, and use simple if necessary
         """
-        if self.nlp: 
-            return self.extract_keywords_ner(text)
-        else: 
-            return self.extract_keywords_simple(text)
+        return self.extract_keywords_ner(text)
+        # if self.nlp: 
+        #     return self.extract_keywords_ner(text)
+        # else: 
+        #     return self.extract_keywords_simple(text)
 
     def add_award(self, award):
         """
