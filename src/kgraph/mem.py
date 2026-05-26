@@ -136,15 +136,14 @@ class KGBuilder():
         for ent in doc.ents:
             if ent.label_ in ['ORG', 'GPE', 'PRODUCT', 'NORP', 'FAC', 'LOC']:
                 # Clean the entity text
-                keyword = ent.text.strip().lower()
-                if len(keyword) > 2 and keyword not in ['the', 'and', 'or']: # Don't need these
-                    keywords.add(keyword)
+                keywords.add(ent.text.strip().lower())
 
         # Extract noun chunks (concepts)
         for chunk in doc.noun_chunks:
-            chunk_text = chunk.text.strip().lower() # Again clean it up
-            if 3 < len(chunk_text) < 30 and len(chunk_text.split()) <= 3:
-                keywords.add(chunk_text)
+            if chunk.root.pos_ in ('NOUN', 'PROPN'): 
+                chunk_text = chunk.text.strip().lower() # Again clean it up
+                if 3 < len(chunk_text) < 30 and len(chunk_text.split()) <= 3:
+                    keywords.add(chunk_text)
 
         return list(keywords)[:10]
      
