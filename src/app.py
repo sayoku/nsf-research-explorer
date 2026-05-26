@@ -157,6 +157,8 @@ if st.button("Send balloons!"):
     st.balloons()
 
 nlp = load_spacy_model() # Cached, runs once
+st.write(f"DEBUG: nlp loaded = {nlp is not None}")
+st.write(f"DEBUG: kg.nlp = {st.session_state.kg.nlp is not None if 'kg' in st.session_state else 'kg not in session'}")
 
 # Manage sessions, avoiding duplicates
 if 'kg' not in st.session_state:
