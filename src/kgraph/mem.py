@@ -176,11 +176,11 @@ class KGBuilder():
         Puts all keyword extraction together.
         Use NER if available, and use simple if necessary
         """
-        return self.extract_keywords_ner(text)
-        # if self.nlp: 
-        #     return self.extract_keywords_ner(text)
-        # else: 
-        #     return self.extract_keywords_simple(text)
+        # return self.extract_keywords_ner(text)
+        if self.nlp: 
+            return self.extract_keywords_ner(text)
+        else: 
+            return self.extract_keywords_simple(text)
 
     def add_award(self, award):
         """
