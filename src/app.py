@@ -12,6 +12,17 @@ from agent.tool import NSFAgent
 from kgraph.mem import KGBuilder
 from kgraph.query import KGQueryAgent 
 
+@st.cache_resource
+def load_spacy_model():
+    import spacy
+    try:
+        return spacy.load("en_core_web_sm")
+    except OSError:
+        with st.spinner("Downloading spaCy language model (one-time setup)..."):
+            from spacy.cli import download
+            download("en_core_web_sm")
+        return spacy.load("en_core_web_sm")
+
 # pyvis integrates with networkx
 def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, node_size: int = 20) -> str:
     """
@@ -145,9 +156,12 @@ st.markdown(
 if st.button("Send balloons!"):
     st.balloons()
 
+nlp = load_spacy_model() # Cached, runs once
+
 # Manage sessions, avoiding duplicates
 if 'kg' not in st.session_state:
     st.session_state.kg = KGBuilder()
+    st.session_state.kg.set_nlp(nlp)
 if 'loaded' not in st.session_state:
     st.session_state.loaded = False
 if 'subgraph' not in st.session_state:          
@@ -207,6 +221,7 @@ with st.sidebar:
     # Add a reset button below Search
     if st.button("Reset Graph", type="secondary"):
         st.session_state.kg = KGBuilder()
+        st.session_state.kg.set_nlp(nlp)
         st.session_state.loaded = False
         st.query_params.clear()
         st.success("Graph cleared!")

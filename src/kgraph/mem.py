@@ -33,16 +33,7 @@ class KGBuilder():
         self.copi_names = set()
         self.institution_names = set()
         self.award_ids = set()
-
-        # Load spaCy model if available
-        if SPACY_AVAIL:
-            try:
-                self.nlp = spacy.load("en_core_web_sm")
-            except OSError:
-                print("Downloading spaCy model...")
-                from spacy.cli import download
-                download("en_core_web_sm")
-                self.nlp = spacy.load("en_core_web_sm")
+        self.nlp = None # set externally
 
     def normalize_name(self, name):
         """
@@ -81,6 +72,9 @@ class KGBuilder():
         normalized = normalized.title()
 
         return normalized
+    
+    def set_nlp(self, nlp): 
+        self.nlp = nlp
     
     def parse_copi_names(self, raw_copi):
         """
