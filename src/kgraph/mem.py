@@ -159,7 +159,7 @@ class KGBuilder():
             List keywords : a list of keywords
         """
         # There probably is a better way to do this, still thinking on it. 
-        common = ["research", "study", "investigation", "development", "analysis"]
+        common = ["research", "study", "investigation", "development", "analysis", "award"]
         words = text.lower().split() 
         keywords = [w for w in words if len(w) > 5 and w not in common]
         # return the first 10 keywords, making sure they're not duplicates, and convert back to list
