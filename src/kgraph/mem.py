@@ -38,10 +38,11 @@ class KGBuilder():
         if SPACY_AVAIL:
             try:
                 self.nlp = spacy.load("en_core_web_sm")
-            except: 
-                self.nlp = None
-        else: 
-            self.nlp = None
+            except OSError:
+                print("Downloading spaCy model...")
+                from spacy.cli import download
+                download("en_core_web_sm")
+                self.nlp = spacy.load("en_core_web_sm")
 
     def normalize_name(self, name):
         """
