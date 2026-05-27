@@ -169,7 +169,7 @@ class NSFAgent:
         )
         # This is the raw response
         response_raw = message.content[0].text
-        response = ""
+        response = response_raw.strip() # fallback to raw, not empty
 
         # Take the json and find the start and end to the information we want
         if "```json" in response_raw:
@@ -236,7 +236,7 @@ class NSFAgent:
             summary['awards'].append({
                 'title': award.get('fundProgramName', 'N/A'),
                 'institution': award.get('awardeeName', 'N/A'),
-                'amount': award.get('estimatedTotalAmt*', 'N/A'),
+                'amount': award.get('estimatedTotalAmt', 'N/A'),
                 'start_date': award.get('startDate', 'N/A'),
                 'abstract': award.get('abstractText', 'N/A')[:500]}) 
         
@@ -299,7 +299,9 @@ if __name__ == "__main__":
     agent = NSFAgent()
     test_agent_accuracy()
     # Matches example one
-    query = "Find water research grants in Tennessee at UT Knoxville."
+    queries = ["Find water research grants in Tennessee at UT Knoxville."
+               "Find cognitive science grants in Ohio."
+            ]
         # # Example two
         # "Find awards in Tennessee at UT Knoxville."
     for query in queries: 
