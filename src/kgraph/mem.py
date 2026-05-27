@@ -23,7 +23,7 @@ class KGBuilder():
     Knowledge graph builder for NSF Awards using NetworkX.
     Transforms data into a connected graph of PIs, Institutions, and Awards.
     """
-    _COMMON_WORDS = ["research", "study", "investigation", "development", "analysis", "award", "researchers"]
+    _COMMON_WORDS = ["research", "study", "investigation", "development", "analysis", "award", "researchers", "nsf"]
 
     def __init__(self):
         self.graph = nx.Graph()
@@ -151,7 +151,7 @@ class KGBuilder():
                     if 3 < len(chunk_text) < 40 and chunk_text not in self._COMMON_WORDS:
                         keywords.add(chunk_text)
 
-        return list(keywords)[:10]
+        return list(keywords)[:8]
      
     def extract_keywords_simple(self, text): 
         """
