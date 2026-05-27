@@ -23,6 +23,7 @@ class KGBuilder():
     Knowledge graph builder for NSF Awards using NetworkX.
     Transforms data into a connected graph of PIs, Institutions, and Awards.
     """
+    _COMMON_WORDS = ["research", "study", "investigation", "development", "analysis", "award", "researchers"]
 
     def __init__(self):
         self.graph = nx.Graph()
@@ -130,8 +131,10 @@ class KGBuilder():
         # Extract named entities
         for ent in doc.ents:
             if ent.label_ in ['ORG', 'GPE', 'PRODUCT', 'NORP', 'FAC', 'LOC']:
-                # Clean the entity text
-                keywords.add(ent.text.strip().lower())
+                clean = ent.text.strip().lower()
+                # Clean the entity text, filter out common words
+                if clean not in self._COMMON_WORDS and len(clean) > 2: 
+                    keywords.add(clean)
 
         # Extract noun chunks (concepts)
         for chunk in doc.noun_chunks:
@@ -140,11 +143,12 @@ class KGBuilder():
                 clean_tokens = [token.text for token in chunk
                     if token.pos_ in ('NOUN', 'PROPN', 'ADJ') 
                     and not token.is_stop and not token.is_punct 
-                    and len(token.text)> 2
+                    and len(token.text)> 2 
+                    and token.text.lower() not in self._COMMON_WORDS
                 ]
                 if clean_tokens: 
                     chunk_text = ' '.join(clean_tokens).strip().lower()
-                    if 3 < len(chunk_text) < 40:
+                    if 3 < len(chunk_text) < 40 and chunk_text not in self._COMMON_WORDS:
                         keywords.add(chunk_text)
 
         return list(keywords)[:10]
@@ -158,10 +162,8 @@ class KGBuilder():
         Returns: 
             List keywords : a list of keywords
         """
-        # There probably is a better way to do this, still thinking on it. 
-        common = ["research", "study", "investigation", "development", "analysis", "award", "researchers"]
         words = text.lower().split() 
-        keywords = [w for w in words if len(w) > 5 and w not in common]
+        keywords = [w for w in words if len(w) > 5 and w not in self._COMMON_WORDS]
         # return the first 10 keywords, making sure they're not duplicates, and convert back to list
         return list(set(keywords[:10]))
     

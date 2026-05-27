@@ -421,21 +421,6 @@ if st.session_state.loaded == True:
             html_str = build_pyvis_html(active_graph, height=graph_height, physics=physics_on, node_size=node_size)
  
         components.html(html_str, height=graph_height + 20, scrolling=False)
-        
-        #  # If subgraph exists and full graph is shown, offer a separate preview
-        # if (
-        #     st.session_state.subgraph is not None
-        #     and not show_subgraph
-        #     and nx.number_of_nodes(st.session_state.subgraph) > 0
-        # ):
-        #     with st.expander("Subgraph query result preview"):
-        #         st.caption(
-        #             f"{nx.number_of_nodes(st.session_state.subgraph)} nodes · "
-        #             f"{nx.number_of_edges(st.session_state.subgraph)} edges"
-        #         )
-        #         #st.markdown(unsafe_allow_html=True)
-        #         sub_html = build_pyvis_html(st.session_state.subgraph, height=420, physics=True, node_size=node_size)
-        #         components.html(sub_html, height=440, scrolling=False)
 
 else:
     st.info("Enter a query in the sidebar to get started")
