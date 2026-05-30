@@ -105,6 +105,23 @@ class KGBuilder():
             if normalized:
                 names.append(normalized)
         return names
+        
+    # Sometimes the nsp API has awardeeNames (typically an institution) that are names.
+    def _is_person_name(self, name):
+        """Check if a string looks like a name with spaCy NER"""
+        if not name or not self.nlp:
+            return False
+        
+        INSTITUTION_KEYWORDS = [
+            'university', 'college', 'institute', 'school', 'laboratory',
+            'lab', 'center', 'foundation', 'corporation', 'corp', 'inc',
+            'llc', 'association', 'department', 'bureau', 'hospital'
+        ]
+        if any(token in name.lower() for token in INSTITUTION_KEYWORDS):
+            return False
+
+        doc = self.nlp(name)
+        return any(ent.label_ == 'PERSON' for ent in doc.ents)
 
     def extract_keywords_ner(self, text): 
         """
@@ -201,6 +218,14 @@ class KGBuilder():
         pi_name = self.normalize_name(raw_pi_name)
         copi_names = self.parse_copi_names(raw_copi)
         institution = self.normalize_name(raw_institution)
+
+        # if awardeeName is a person, treat as a PI instead and use the perfLocation for institution
+        if self._is_person_name(institution):
+            if institution not in self.pi_names:
+                self.copi_names.add(institution)
+                self.graph.add_node(institution, type='PI', name=institution)
+            perf_location = award.get('perfLocation', '').strip()
+            institution = self.normalize_name(perf_location)
 
         # Skip if award already exists
         if award_id in self.award_ids:
