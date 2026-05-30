@@ -128,10 +128,10 @@ class KGBuilder():
         doc = self.nlp(text[:2000])
         keywords = set()
 
-        # Extract named entities
+        # Extract named entities and add to set of keywords
         for ent in doc.ents:
             if ent.label_ in ['ORG', 'GPE', 'PRODUCT', 'NORP', 'FAC', 'LOC']:
-                clean = ent.text.strip().lower()
+                clean = ent.root.lemma_.strip().lower() #root.lemma_ 
                 # Clean the entity text, filter out common words
                 if clean not in self._COMMON_WORDS and len(clean) > 2: 
                     keywords.add(clean)
@@ -140,7 +140,7 @@ class KGBuilder():
         for chunk in doc.noun_chunks:
             if chunk.root.pos_ in ('NOUN', 'PROPN'): 
                 # filter individual tokens 
-                clean_tokens = [token.text for token in chunk
+                clean_tokens = [token.lemma_ for token in chunk #lemma_ normalizes words to their base form
                     if token.pos_ in ('NOUN', 'PROPN', 'ADJ') 
                     and not token.is_stop and not token.is_punct 
                     and len(token.text)> 2 
@@ -435,4 +435,3 @@ if __name__ == "__main__":
             for award in awards[:3]:
                 print(f"   {award}")
             print()
-                    
