@@ -69,8 +69,10 @@ class KGBuilder():
                 name = f"{first} {last}" # Here it is yippee
 
         normalized = ' '.join(name.lower().split()).title() # lowercase, title case
-        # Title case
-        normalized = normalized.title()
+        # Further normalize middle names to be a middle inital 
+        tokens = normalized.split()
+        if len(tokens) == 3:
+            normalized = f"{tokens[0]} {tokens[1][0]}. {tokens[2]}"
 
         return normalized
     
