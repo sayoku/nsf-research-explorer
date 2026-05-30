@@ -47,13 +47,10 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         "Award":       {"background": "#6495ED", "border": "#3A6BC0", "highlight": {"background": "#A0B8F5", "border": "#2A55A0"}},
         "Topic":       {"background": "#E37383", "border": "#B84055", "highlight": {"background": "#F0A0B0", "border": "#902030"}},
     }
-    
-    #PARAM_MAP = {"PI": "pi", "Institution": "institution", "Award": "award"}
 
     # make a copy of the graph 
     g = graph.copy()
     node_titles = {} 
-    #node_nav = {} # node ID goes to param key for click handler
 
     for node, data in g.nodes(data=True):
         ntype = data.get("type", "")
@@ -157,8 +154,6 @@ if st.button("Send balloons!"):
     st.balloons()
 
 nlp = load_spacy_model() # Cached, runs once
-#st.write(f"DEBUG: nlp loaded = {nlp is not None}")
-#st.write(f"DEBUG: kg.nlp = {st.session_state.kg.nlp is not None if 'kg' in st.session_state else 'kg not in session'}")
 
 # Manage sessions, avoiding duplicates
 if 'kg' not in st.session_state:
@@ -168,26 +163,6 @@ if 'loaded' not in st.session_state:
     st.session_state.loaded = False
 if 'subgraph' not in st.session_state:          
     st.session_state.subgraph = None  
-
-# Read deep-link query params from node clicks
-# params = st.query_params
-# deep_pi   = params.get("pi", None)
-# deep_inst = params.get("institution", None)
-
-# components.html("""
-# <script>
-# window.addEventListener('message', function(e) {
-#     if (e.data && e.data.type === 'nsf_nav') {
-#         var key = e.data.key;
-#         var value = e.data.value;
-#         var url = new URL(window.parent.location.href);
-#         url.searchParams.set(key, value);
-#         window.parent.history.pushState({}, '', url);
-#         window.parent.location.reload();
-#     }
-# });
-# </script>
-# """, height=0)
 
 # Add sidebar for query
 with st.sidebar:
@@ -213,7 +188,6 @@ with st.sidebar:
     if st.button("Search", type="primary"):
         if query:
             with st.spinner("Searching NSF database..."):
-                # st.session_state.kg = KGBuilder()  # Resetting
                 st.session_state.kg.load_query_results(query, max_awards=max_awards)
                 st.session_state.loaded = True
                 st.success(f"Loaded {max_awards} awards!")
@@ -228,9 +202,6 @@ with st.sidebar:
         st.query_params.clear()
         st.success("Graph cleared!")
 
-    if st.button("Send snow!"):
-        st.snow()
-
     st.header("Subgraph Query")
     nl_query = st.text_input("Ask about the graph:", placeholder="e.g., Show water research")
     
@@ -243,7 +214,6 @@ with st.sidebar:
             
         # Store subgraph in session
         st.session_state.subgraph = subgraph
-
 
 # Main content
 if st.session_state.loaded == True:
@@ -290,8 +260,6 @@ if st.session_state.loaded == True:
         with pi_tab: 
             # If there are PI's, 
             if pis:
-                #default_pi_idx = pis.index(deep_pi) if deep_pi in pis else 0
-                #selected_pi = st.selectbox("Select a PI:", pis, index=default_pi_idx)
                 selected_pi = st.selectbox("Select a PI:", pis)
 
                 if selected_pi:
@@ -345,8 +313,6 @@ if st.session_state.loaded == True:
 
         # If there are insitutions, 
         if institutions:
-            #default_inst_idx = institutions.index(deep_inst) if deep_inst in institutions else 0
-            #selected_inst = st.selectbox("Select an Institution:", institutions, index=default_inst_idx)
             selected_inst = st.selectbox("Select an Institution:", institutions)
 
             if selected_inst:
@@ -429,7 +395,7 @@ else:
     st.subheader("Example Queries:")
     examples = [
         "Water research in Tennessee",
-        "Cognitive science at Ohio State University",
+        "Cognitive science at The Ohio State University",
         "Grants over $100,000 in California",
         "Environmental research in New York",
         "Machine learning research"

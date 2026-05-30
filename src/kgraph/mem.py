@@ -435,5 +435,4 @@ if __name__ == "__main__":
             for award in awards[:3]:
                 print(f"   {award}")
             print()
-
-        
+                    

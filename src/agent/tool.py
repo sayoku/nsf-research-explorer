@@ -312,15 +312,4 @@ if __name__ == "__main__":
 
     params, results = agent.execute_agent(query)
     print(agent.complete_reply(query, results))
-
-    # # Testing function with keyword search
-    # # Currently using a json formatted string and not a whole file
-    # result = query_nsf_api({'keyword' : 'water', 'awardeeStateCode':'TN', 'awardeeName':'university+of+tennessee+knoxville'})
-    # #result = query_nsf_api({'awardeeStateCode':'TN', 'awardeeName':'university+of+tennessee+knoxville'})
-
-    # if result:  # not None (null) 
-    #     # Access total count data through in the json output
-    #     total = result['response']['metadata']['totalCount']
-    #     print("Found {total} awards for 'water'".format(total=total))
-    # else:
-    #     print("Failed, no data.")
+    
