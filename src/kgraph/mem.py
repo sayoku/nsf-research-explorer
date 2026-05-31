@@ -69,11 +69,19 @@ class KGBuilder():
                 name = f"{first} {last}" # Here it is yippee
 
         normalized = ' '.join(name.lower().split()).title() # lowercase, title case
+
+        INSTITUTION_KEYWORDS = [
+            'university', 'college', 'institute', 'school', 'laboratory',
+            'lab', 'center', 'foundation', 'corporation', 'corp', 'inc',
+            'llc', 'association', 'department', 'bureau', 'hospital',
+            'of', 'the', 'and', 'for'
+        ]
+
         # Further normalize middle names to be a middle inital 
         tokens = normalized.split()
-        if len(tokens) == 3:
-            normalized = f"{tokens[0]} {tokens[1][0]}. {tokens[2]}"
 
+        if len(tokens) == 3 and self._is_person_name(normalized):
+            normalized = f"{tokens[0]} {tokens[1][0]}. {tokens[2]}"
 
         return normalized
     
