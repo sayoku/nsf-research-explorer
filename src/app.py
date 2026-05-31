@@ -163,6 +163,8 @@ if 'loaded' not in st.session_state:
     st.session_state.loaded = False
 if 'subgraph' not in st.session_state:          
     st.session_state.subgraph = None  
+if 'summary' not in st.session_state:
+    st.session_state.summary = None
 
 # Add sidebar for query
 with st.sidebar:
@@ -188,7 +190,7 @@ with st.sidebar:
     if st.button("Search", type="primary"):
         if query:
             with st.spinner("Searching NSF database..."):
-                st.session_state.kg.load_query_results(query, max_awards=max_awards)
+                st.session_state.summary = st.session_state.kg.load_query_results(query, max_awards=max_awards)
                 st.session_state.loaded = True
                 st.success(f"Loaded {max_awards} awards!")
         else:
@@ -199,6 +201,7 @@ with st.sidebar:
         st.session_state.kg = KGBuilder()
         st.session_state.kg.set_nlp(nlp)
         st.session_state.loaded = False
+        st.session_state.summary = None
         st.query_params.clear()
         st.success("Graph cleared!")
 
@@ -239,6 +242,12 @@ if st.session_state.loaded == True:
             st.metric("Unique PIs", stats['unique_pis'])
         with col5: 
             st.metric("Unique Co-PIs", stats['unique_copis'])
+
+        st.subheader("Summary")
+        if st.session_state.summary: 
+            st.write(st.session_state.summary)
+        else: 
+            st.info("Summary not available")
 
         st.subheader("Node type breakdown")
         # Use get_graph_info to get counts of types

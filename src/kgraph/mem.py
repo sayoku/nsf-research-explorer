@@ -74,6 +74,7 @@ class KGBuilder():
         if len(tokens) == 3:
             normalized = f"{tokens[0]} {tokens[1][0]}. {tokens[2]}"
 
+
         return normalized
     
     def set_nlp(self, nlp): 
@@ -337,11 +338,13 @@ class KGBuilder():
         print(f"Loaded {number_loaded} awards into the knowledge graph.")
         print(f"The graph has {self.graph.number_of_nodes()} nodes and {self.graph.number_of_edges()} edges.")
 
-        # Print deduplication stats
-        print(f"Unique PIs: {len(self.pi_names)}")
-        print(f"Unique Co-PIs: {len(self.copi_names)}")          
-        print(f"Unique Institutions: {len(self.institution_names)}")
-        print(f"Unique Awards: {len(self.award_ids)}")
+        # # Print deduplication stats
+        # print(f"Unique PIs: {len(self.pi_names)}")
+        # print(f"Unique Co-PIs: {len(self.copi_names)}")          
+        # print(f"Unique Institutions: {len(self.institution_names)}")
+        # print(f"Unique Awards: {len(self.award_ids)}")
+
+        return self.agent.complete_reply(query, results) # returns the summary
 
     def get_pi_awards(self, pi_name): 
         """
