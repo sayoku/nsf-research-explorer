@@ -70,13 +70,6 @@ class KGBuilder():
 
         normalized = ' '.join(name.lower().split()).title() # lowercase, title case
 
-        INSTITUTION_KEYWORDS = [
-            'university', 'college', 'institute', 'school', 'laboratory',
-            'lab', 'center', 'foundation', 'corporation', 'corp', 'inc',
-            'llc', 'association', 'department', 'bureau', 'hospital',
-            'of', 'the', 'and', 'for'
-        ]
-
         # Further normalize middle names to be a middle inital 
         tokens = normalized.split()
 
@@ -345,12 +338,6 @@ class KGBuilder():
         # Print number of awards loaded and then the updated number of nodes and edges.
         print(f"Loaded {number_loaded} awards into the knowledge graph.")
         print(f"The graph has {self.graph.number_of_nodes()} nodes and {self.graph.number_of_edges()} edges.")
-
-        # # Print deduplication stats
-        # print(f"Unique PIs: {len(self.pi_names)}")
-        # print(f"Unique Co-PIs: {len(self.copi_names)}")          
-        # print(f"Unique Institutions: {len(self.institution_names)}")
-        # print(f"Unique Awards: {len(self.award_ids)}")
 
         return self.agent.complete_reply(query, results) # returns the summary
 

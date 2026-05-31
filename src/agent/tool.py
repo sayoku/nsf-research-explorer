@@ -23,7 +23,6 @@ if not api_key:
 """
 Tool: Given a structured input, query the NSF API and output the data in a json. 
 """
-
 # Fields that legitimately appear multiple times in a single <award> block
 # and should always be returned as a list (even when only one tag is present).
 MULTI_FIELDS = {'coPDPI', 'pi', 'fundsObligated', 'primaryProgram', 'progRefCode'}
@@ -96,7 +95,6 @@ def query_nsf_api(params):
         awards.append(award)
  
     return {"response": {"metadata": metadata, "award": awards}}
-
 
 class NSFAgent: 
     """

@@ -331,7 +331,6 @@ class KGQueryAgent():
             return self.find_copi_awards(parameters.get("copi_name", ""))
         elif operation == "find_collaborators":                        
             return self.find_collaborators(parameters.get("person_name", ""))
-        
         else:     
             return []
     
