@@ -245,8 +245,9 @@ class NSFAgent:
         Write a clear, concise summary for a general audience. It should:
             1. State how many grants were found
             2. Highlight 2-3 interesting examples with key details
-            3. Note any patterns in funding amounts, institutions, or focus
-            4. Use accessible language (avoid jargon)
+            3. When mentioning funding ranges, always include both the minimum AND maximum amount (e.g. "$50,000 to $1,200,000")
+            4. Note any patterns in funding amounts, institutions, or focus
+            5. Use accessible language (avoid jargon)
         Keep it under 150 words.
         """
 
