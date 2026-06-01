@@ -245,7 +245,7 @@ if st.session_state.loaded == True:
 
         st.subheader("Summary")
         if st.session_state.summary: 
-            st.write(st.session_state.summary)
+            t.write(st.session_state.summary.replace("$", "\\$"))
         else: 
             st.info("Summary not available")
 
