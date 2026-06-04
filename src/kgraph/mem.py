@@ -310,8 +310,8 @@ class KGBuilder():
             return []
         
         # Get all neighbors that are awards
-        return [n for n in nx.neighbors(self.graph, topic_id)]
-                #if n.startswith('Award_')
+        return [n for n in nx.neighbors(self.graph, topic_id)
+                if n.startswith('Award_')]
 
     def load_query_results(self, query, max_awards = 100): 
         """
