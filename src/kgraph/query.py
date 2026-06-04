@@ -236,7 +236,7 @@ class KGQueryAgent():
     
         pi_nodes = [
             n for n in self.graph.nodes()
-            if n.startswith('PI_') and pi_name.lower() in str(n).lower()
+            if self.graph.nodes[n] == 'PI' and pi_name.lower() in str(n).lower()
         ]
         #Grab them awards
         award_nodes = set()
