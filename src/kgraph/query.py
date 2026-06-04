@@ -84,6 +84,10 @@ class KGQueryAgent():
         Query: "Who has John Smith collaborated with?"
         Output: {"operation": "find_collaborators", "parameters": {"person_name": "john smith"}, "explanation": "Finding all collaborators of John Smith"}
 
+        Query: "Awards about cells"
+        Output: {"operation": "find_by_topic", "parameters": {"topic": "cells"}, "explanation": "Finding all awards related to cells"}
+
+
         Query: "Water research at Vanderbilt"
         Output: 
         {
