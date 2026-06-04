@@ -148,13 +148,25 @@ class KGQueryAgent():
     def find_by_name(self, name_pattern: str) -> list:
         """Find nodes with names matching a pattern (not case sensitive)"""
         pattern = name_pattern.lower()
-        matching_nodes = []
-            
+
+        pi_nodes = []    
         for node in self.graph.nodes():
             if pattern in str(node).lower(): #if the pattern is found, add the matching nodes to the list
-                matching_nodes.append(node) 
-            
-        return matching_nodes
+                pi_nodes.append(node) 
+
+        #Grab them awards
+        award_nodes = set()
+        for pi in pi_nodes:
+            for neighbor in nx.neighbors(self.graph, pi):
+                if neighbor.startswith('Award_'):
+                    award_nodes.add(neighbor)
+        
+        # Return subgraph (pis + awards + connections)
+        all_nodes = set(pi_nodes) | award_nodes
+        for award in award_nodes:
+            all_nodes.update(nx.neighbors(self.graph, award))
+        
+        return list(all_nodes)
         
     # Operation #3
     def find_neighbors(self, node: str, max_depth: int = 1) -> list:
