@@ -148,27 +148,13 @@ class KGQueryAgent():
     def find_by_name(self, name_pattern: str) -> list:
         """Find nodes with names matching a pattern (not case sensitive)"""
         pattern = name_pattern.lower()
-
-        pi_nodes = []    
+        matching_nodes = []
+            
         for node in self.graph.nodes():
             if pattern in str(node).lower(): #if the pattern is found, add the matching nodes to the list
-                pi_nodes.append(node) 
-
-        #Grab them awards
-        award_nodes = set()
-        for pi in pi_nodes:
-            for neighbor in nx.neighbors(self.graph, pi):
-                if neighbor.startswith('Topic_'):
-                    award_nodes.add(neighbor)
-        
-        # Return subgraph (pis + topic + connections)
-        topic_nodes = set()
-        for award in award_nodes:
-            for neighbor in nx.neighbors(self.graph, award):
-                if neighbor.startswith('Topic'):
-                    topic_nodes.add(neighbor)
-        
-        return list(set(pi_nodes) | award_nodes | topic_nodes)
+                matching_nodes.append(node) 
+            
+        return matching_nodes
         
     # Operation #3
     def find_neighbors(self, node: str, max_depth: int = 1) -> list:
@@ -235,18 +221,38 @@ class KGQueryAgent():
     # Operation 6
     def find_pi_awards(self, pi_name: str) -> list:
         """Find all awards for a specific PI."""
-        pi_node = None       # Find PI node 
-        for node in self.graph.nodes():
-            node_data = self.graph.nodes[node] # pull data and check type and if it matches
-            if node_data.get('type') == 'PI' and pi_name.lower() in str(node).lower():
-                pi_node = node 
-                break
+        # pi_node = None       # Find PI node 
+        # for node in self.graph.nodes():
+        #     node_data = self.graph.nodes[node] # pull data and check type and if it matches
+        #     if node_data.get('type') == 'PI' and pi_name.lower() in str(node).lower():
+        #         pi_node = node 
+        #         break
         
-        if not pi_node:
-            return []
+        # if not pi_node:
+        #     return []
         
-        # Get all neighbors
-        return self.find_neighbors(pi_node, max_depth=1)
+        # # Get all neighbors
+        # return self.find_neighbors(pi_node, max_depth=1)
+    
+        pi_nodes = [
+            n for n in self.graph.nodes()
+            if n.startswith('PI_') and pi_name.lower() in str(n).lower()
+        ]
+        #Grab them awards
+        award_nodes = set()
+        for pi in pi_nodes:
+            for neighbor in nx.neighbors(self.graph, pi):
+                if neighbor.startswith('Topic_'):
+                    award_nodes.add(neighbor)
+            
+            # Return subgraph (pis + topic + connections)
+        topic_nodes = set()
+        for award in award_nodes:
+            for neighbor in nx.neighbors(self.graph, award):
+                if neighbor.startswith('Topic'):
+                    topic_nodes.add(neighbor)
+            
+        return list(set(pi_nodes) | award_nodes | topic_nodes)
     
     # Operation 7
     def find_institution_pis(self, institution_name: str) -> list:
