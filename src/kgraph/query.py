@@ -242,14 +242,14 @@ class KGQueryAgent():
         award_nodes = set()
         for pi in pi_nodes:
             for neighbor in nx.neighbors(self.graph, pi):
-                if neighbor.startswith('Topic_'):
+                if neighbor.startswith('Award_'):
                     award_nodes.add(neighbor)
             
-            # Return subgraph (pis + topic + connections)
+        # Return subgraph (pis + topic + connections)
         topic_nodes = set()
         for award in award_nodes:
             for neighbor in nx.neighbors(self.graph, award):
-                if neighbor.startswith('Topic'):
+                if neighbor.startswith('Topic_'):
                     topic_nodes.add(neighbor)
             
         return list(set(pi_nodes) | award_nodes | topic_nodes)
