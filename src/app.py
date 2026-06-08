@@ -410,6 +410,7 @@ if st.session_state.loaded == True:
             selected_award = st.selectbox("Select an Award:", awards)
 
             if selected_award:
+                award_id = selected_award.removeprefix("Award_")
                 award_data = st.session_state.kg.graph.nodes[selected_award]
 
                 # Need to traverse nodes to get PI and CoPI data
@@ -417,7 +418,7 @@ if st.session_state.loaded == True:
                 pi_nodes = [n for n in neighbors if node_types.get(n) == 'PI']
                 copi_nodes = [n for n in neighbors if node_types.get(n) == 'Co-PI']
 
-                st.link_button("Visit NSF Award Page!", f"https://www.nsf.gov/awardsearch/show-award?AWD_ID={selected_award}", key=None, on_click="callable", args=None, kwargs=None, help=None, 
+                st.link_button("Visit NSF Award Page!", f"https://www.nsf.gov/awardsearch/show-award?AWD_ID={award_id}", key=None, on_click="callable", args=None, kwargs=None, help=None, 
                     type="secondary", icon=None, icon_position="left", disabled=False, use_container_width=None, width="content", shortcut=None)
 
                 st.write(f"**Program:** {award_data.get('program', 'N/A')}")
