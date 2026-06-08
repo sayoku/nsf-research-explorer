@@ -410,11 +410,15 @@ if st.session_state.loaded == True:
             selected_award = st.selectbox("Select an Award:", awards)
 
             if selected_award:
-                award_data = st.session_state.kg.graph.nodes[award]
+                award_data = st.session_state.kg.graph.nodes[selected_award]
                 st.write(f"**Program:** {award_data.get('program', 'N/A')}")
                 st.write(f"**Amount:** {award_data.get('amount', 0)}")
+                st.write(f"**Principal Investigator:** {award_data.get('PI', 'N/A')}")
+                st.write(f"**Co-Investigator:** {award_data.get('Co-PI', 'N/A')}")
                 st.write(f"**Start Date:** {award_data.get('start_date', 'N/A')}")
                 st.write(f"**Abstract:** {award_data.get('abstract', 'N/A')}")
+            else: 
+                st.write(f"There is no data for this award.")
         else:
             st.info("No awards found in the current graph. ")
 
