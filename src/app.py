@@ -417,6 +417,9 @@ if st.session_state.loaded == True:
                 pi_nodes = [n for n in neighbors if node_types.get(n) == 'PI']
                 copi_nodes = [n for n in neighbors if node_types.get(n) == 'Co-PI']
 
+                st.link_button("Visit NSF Award Page!", f"https://www.nsf.gov/awardsearch/show-award?AWD_ID={selected_award}", key=None, on_click="callable", args=None, kwargs=None, help=None, 
+                    type="secondary", icon=None, icon_position="left", disabled=False, use_container_width=None, width="content", shortcut=None)
+
                 st.write(f"**Program:** {award_data.get('program', 'N/A')}")
                 st.write(f"**Amount:** {award_data.get('amount', 0)}")
                 st.write(f"**Principal Investigator:** {', '.join(pi_nodes) or 'N/A'}")
