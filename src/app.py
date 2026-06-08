@@ -413,10 +413,7 @@ if st.session_state.loaded == True:
                 award_data = st.session_state.kg.graph.nodes[selected_award]
 
                 # Need to traverse nodes to get PI and CoPI data
-
-                #node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
                 neighbors = list(st.session_state.kg.graph.neighbors(selected_award))
-    
                 pi_nodes = [n for n in neighbors if node_types.get(n) == 'PI']
                 copi_nodes = [n for n in neighbors if node_types.get(n) == 'Co-PI']
 
