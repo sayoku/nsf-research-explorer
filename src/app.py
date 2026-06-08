@@ -58,8 +58,11 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         # build hover tooltip in html 
         # title, rendered as html on hover
         lines = [f"{node}", f"Type: {ntype}", "---"]
-        for k, v in data.items():
-            if k in ("type", "title", "label", "color", "size"):
+        for k, v in data.items(): # we now want the speific title
+            if k == "title":
+                if ntype == "Award" and v: 
+                    lines.append(f"title: {v}")
+            if k in ("type", "label", "color", "size"):
                 continue
             if k == "abstract" and v:
                 chunk = str(v)[:200] + ("…" if len(str(v)) > 200 else "")
