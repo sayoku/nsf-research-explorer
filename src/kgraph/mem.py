@@ -236,11 +236,14 @@ class KGBuilder():
             return
         self.award_ids.add(award_id)
 
+        title = award.get('title', 'Untitled')  # NSF API field is 'title'
+
         # Add award node - and award details
         self.graph.add_node(
             f"Award_{award_id}",
             type = 'Award',
             id = award_id,
+            title=title, 
             program = program,
             amount = amount,
             start_date = start_date,
