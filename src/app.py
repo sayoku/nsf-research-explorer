@@ -26,9 +26,10 @@ def load_spacy_model():
 # pyvis integrates with networkx
 def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, node_size: int = 20) -> str:
     """
-    Convert a networkx graph to a pvis html string
+    Convert a networkx graph to a pyvis html string
     Node colors correspond to type, clicking a node shows all attributes
-    Clicking a PI, Insitution, or Award node navigates to the corresponding tab
+    Clicking a PI, Institution, or Award node sends a postMessage to the
+    parent Streamlit frame so it can navigate to the corresponding view
     Returns full HTML string for st.components.v1.html()
     """
     # Import pyvis
@@ -58,11 +59,11 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         # build hover tooltip in html 
         # title, rendered as html on hover
         lines = [f"{node}", f"Type: {ntype}", "---"]
-        for k, v in data.items(): # we now want the speific title
+        for k, v in data.items(): # we now want the specific title
             if k == "title":
                 if ntype == "Award" and v: 
                     lines.append(f"title: {v}")
-            if k in ("type", "label", "color", "size"):
+            if k in ("type", "label", "color", "size", "nodeType"):
                 continue
             if k == "abstract" and v:
                 chunk = str(v)[:200] + ("…" if len(str(v)) > 200 else "")
@@ -86,16 +87,21 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         g.nodes[node]["label"] = label
         g.nodes[node]["color"] = COLORS.get(ntype)
         g.nodes[node]["size"] = node_size if ntype != "Topic" else max(node_size - 6, 8)
+        # Store nodeType as a node attribute so JS can read it on click
+        g.nodes[node]["nodeType"] = ntype
         
     # build network and load using from_nx()
     net = Network(height=f"{height}px", width="100%", bgcolor="#0F1117", font_color="#E8E8E8", directed=False)
     net.from_nx(g) # Translate nodes and edges
 
-     # Apply titles AFTER from_nx so they aren't overwritten
+    # Apply titles and nodeType AFTER from_nx so they aren't overwritten
     for pyvis_node in net.nodes:
         nid = pyvis_node["id"]
         if nid in node_titles:
             pyvis_node["title"] = node_titles[nid]
+        # Ensure nodeType is on the vis.js node object
+        node_data = g.nodes.get(nid, {})
+        pyvis_node["nodeType"] = node_data.get("type", "")
 
     # Use physics thru barnes_hut()
     if physics: 
@@ -137,7 +143,38 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     }
     </style>
     """
+
+    # Click handler: postMessage to parent Streamlit frame with node id and type
+    # Only for navigable node types (PI, Co-PI, Institution, Award)
+    click_handler_script = """
+    <script>
+    (function() {
+      function attachClickHandler() {
+        if (typeof network === 'undefined') {
+          setTimeout(attachClickHandler, 200);
+          return;
+        }
+        network.on("click", function(params) {
+          if (params.nodes.length === 0) return;
+          var nodeId = params.nodes[0];
+          var nodeData = nodes.get(nodeId);
+          var nodeType = nodeData ? nodeData.nodeType : "";
+          var navigable = ["PI", "Co-PI", "Institution", "Award"];
+          if (navigable.indexOf(nodeType) === -1) return;
+          window.parent.postMessage({
+            type: "graphNodeClick",
+            nodeId: nodeId,
+            nodeType: nodeType
+          }, "*");
+        });
+      }
+      attachClickHandler();
+    })();
+    </script>
+    """
+
     html = html.replace("</head>", tooltip_style + "</head>")
+    html = html.replace("</body>", click_handler_script + "</body>")
     return html
 
 # Configure page
@@ -168,8 +205,40 @@ if 'subgraph' not in st.session_state:
     st.session_state.subgraph = None  
 if 'summary' not in st.session_state:
     st.session_state.summary = None
+if 'active_view' not in st.session_state:
+    st.session_state.active_view = "Summary"
+# Pre-selection targets set by graph node clicks
+if 'selected_award' not in st.session_state:
+    st.session_state.selected_award = None
+if 'selected_pi' not in st.session_state:
+    st.session_state.selected_pi = None
+if 'selected_copi' not in st.session_state:
+    st.session_state.selected_copi = None
+if 'selected_institution' not in st.session_state:
+    st.session_state.selected_institution = None
 
-# Add sidebar for query
+# Consume query params written by the postMessage receiver
+# The receiver snippet (rendered below) writes ?node=...&ntype=... then we
+# read + clear them here so the next rerun is clean
+qp = st.query_params
+if "node" in qp and st.session_state.loaded:
+    node_id = qp["node"]
+    node_type = qp.get("ntype", "")
+    if node_type == "Award":
+        st.session_state.active_view = "Awards"
+        st.session_state.selected_award = node_id
+    elif node_type == "PI":
+        st.session_state.active_view = "PIs"
+        st.session_state.selected_pi = node_id
+    elif node_type == "Co-PI":
+        st.session_state.active_view = "PIs"
+        st.session_state.selected_copi = node_id
+    elif node_type == "Institution":
+        st.session_state.active_view = "Institutions"
+        st.session_state.selected_institution = node_id
+    st.query_params.clear()
+
+# Sidebar 
 with st.sidebar:
     st.header("Query Settings")
 
@@ -180,8 +249,8 @@ with st.sidebar:
         help="Use natural language to search for NSF grants"
     )
 
-    # How many awards to use - still deciding on the best way
-    max_awards = st.slider( # Could also use st.text-input() 
+    # How many awards to use
+    max_awards = st.slider(
         "Maximum awards to load:",
         min_value=5,
         max_value=100,
@@ -189,22 +258,28 @@ with st.sidebar:
         step=5
     )
     
-    #Search button, which queries the NSF API using KGBuilder
+    # Search button, which queries the NSF API using KGBuilder
     if st.button("Search", type="primary"):
         if query:
             with st.spinner("Searching NSF database..."):
                 st.session_state.summary = st.session_state.kg.load_query_results(query, max_awards=max_awards)
                 st.session_state.loaded = True
+                st.session_state.active_view = "Summary"
                 st.success(f"Loaded {max_awards} awards!")
         else:
             st.warning("Please enter a search query")
 
-    # Add a reset button below Search
+    # Reset button
     if st.button("Reset Graph", type="secondary"):
         st.session_state.kg = KGBuilder()
         st.session_state.kg.set_nlp(nlp)
         st.session_state.loaded = False
         st.session_state.summary = None
+        st.session_state.active_view = "Summary"
+        st.session_state.selected_award = None
+        st.session_state.selected_pi = None
+        st.session_state.selected_copi = None
+        st.session_state.selected_institution = None
         st.query_params.clear()
         st.success("Graph cleared!")
 
@@ -221,15 +296,46 @@ with st.sidebar:
         # Store subgraph in session
         st.session_state.subgraph = subgraph
 
-# Main content
-if st.session_state.loaded == True:
-    # Tabs for different info
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Summary", "PIs", "Institutions", "Knowledge Graph", "Awards"])
+    # View navigation - only when data is loaded 
+    if st.session_state.loaded:
+        st.divider()
+        st.header("Navigate")
+        views = ["Summary", "PIs", "Institutions", "Knowledge Graph", "Awards"]
+        chosen = st.radio(
+            "View:",
+            views,
+            index=views.index(st.session_state.active_view),
+            key="nav_radio",
+            label_visibility="collapsed",
+        )
+        if chosen != st.session_state.active_view:
+            st.session_state.active_view = chosen
+            st.rerun()
 
-    # tab1
-    with tab1:
+# Invisible postMessage receiver
+# This tiny component listens for graphNodeClick messages from the Pyvis iframe
+# and redirects the parent page to ?node=...&ntype=... which triggers a rerun.
+_receiver_html = """
+<script>
+window.addEventListener("message", function(event) {
+  var d = event.data;
+  if (!d || d.type !== "graphNodeClick") return;
+  var url = new URL(window.parent.location.href);
+  url.searchParams.set("node",  d.nodeId);
+  url.searchParams.set("ntype", d.nodeType);
+  window.parent.location.href = url.toString();
+});
+</script>
+"""
+components.html(_receiver_html, height=0, scrolling=False)
+
+# Main content
+if st.session_state.loaded:
+    view = st.session_state.active_view
+
+    # Summary
+    if view == "Summary":
         st.header("Knowledge graph overview and summary")
-        # Get stats and organize them into columns
         stats = st.session_state.kg.get_deduplication_stats()
 
         col1, col2, col3, col4, col5 = st.columns(5)
@@ -239,7 +345,6 @@ if st.session_state.loaded == True:
             st.metric("Total Edges", nx.number_of_edges(st.session_state.kg.graph))
         with col3:
             density = nx.density(st.session_state.kg.graph)
-            # show as 4-decimal float 
             st.metric("Graph Density", f"{density:.4f}")
         with col4:
             st.metric("Unique PIs", stats['unique_pis'])
@@ -253,26 +358,28 @@ if st.session_state.loaded == True:
             st.info("Summary not available")
 
         st.subheader("Node type breakdown")
-        # Use get_graph_info to get counts of types
         type_counts = st.session_state.kg.get_graph_info()
-        # Show as bar chart
         st.bar_chart(type_counts)
 
-    # tab2
-    with tab2:
+    # PIs
+    elif view == "PIs":
         st.header("Principal Investigators")
 
-        # Get all PI's from the graph
         node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
-        pis = [node for node, node_type in node_types.items() if node_type == 'PI']
-        copis = [node for node, node_type in node_types.items() if node_type == 'Co-PI']
+        pis   = [node for node, nt in node_types.items() if nt == 'PI']
+        copis = [node for node, nt in node_types.items() if nt == 'Co-PI']
 
         pi_tab, copi_tab = st.tabs([f"Lead PIs ({len(pis)})", f"Co-PIs ({len(copis)})"])
 
-        with pi_tab: 
-            # If there are PI's, 
+        with pi_tab:
             if pis:
-                selected_pi = st.selectbox("Select a PI:", pis)
+                # Pre-select a PI if one was navigated to from the graph
+                pi_index = 0
+                if st.session_state.selected_pi and st.session_state.selected_pi in pis:
+                    pi_index = pis.index(st.session_state.selected_pi)
+                    st.session_state.selected_pi = None  # consume
+
+                selected_pi = st.selectbox("Select a PI:", pis, index=pi_index)
 
                 if selected_pi:
                     st.subheader(f"Awards for {selected_pi}")
@@ -289,18 +396,25 @@ if st.session_state.loaded == True:
                                 st.write(f"**Abstract:** {award_data.get('abstract', 'N/A')}")
                     else:
                         st.info("No awards found for this PI")
-        with copi_tab: 
-            if copis: 
-                selected_copi = st.selectbox("Select a Co-PI:", copis)
+
+        with copi_tab:
+            if copis:
+                # Pre-select a Co-PI if one was navigated to from the graph
+                copi_index = 0
+                if st.session_state.selected_copi and st.session_state.selected_copi in copis:
+                    copi_index = copis.index(st.session_state.selected_copi)
+                    st.session_state.selected_copi = None  # consume
+
+                selected_copi = st.selectbox("Select a Co-PI:", copis, index=copi_index)
                 if selected_copi:
                     st.subheader(f"Awards where {selected_copi} is a Co-PI")
-                    copi_awards = st.session_state.kg.get_copi_awards(selected_copi)
+                    copi_awards  = st.session_state.kg.get_copi_awards(selected_copi)
                     collaborators = st.session_state.kg.get_collaborators(selected_copi)
- 
+
                     col_a, col_b = st.columns(2)
                     col_a.metric("Co-PI Awards", len(copi_awards))
                     col_b.metric("Collaborators", len(collaborators))
- 
+
                     for award in copi_awards:
                         award_data = st.session_state.kg.graph.nodes[award]
                         with st.expander(award):
@@ -308,35 +422,38 @@ if st.session_state.loaded == True:
                             st.write(f"**Amount:** ${int(award_data.get('amount', 0)):,}")
                             st.write(f"**Start Date:** {award_data.get('start_date', 'N/A')}")
                             st.write(f"**Abstract:** {award_data.get('abstract', 'N/A')}")
- 
+
                     if collaborators:
                         st.subheader("Collaborators")
                         st.write(", ".join(collaborators))
             else:
                 st.info("No co-investigators found in the current graph. "
                         "Co-PI data depends on NSF API availability for the loaded awards.")
-        
-    # tab3
-    with tab3:
+
+    # Institutions
+    elif view == "Institutions":
         st.header("Institutions")
 
-        node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
-        institutions = [node for node, node_type in node_types.items() if node_type == 'Institution']
+        node_types    = nx.get_node_attributes(st.session_state.kg.graph, 'type')
+        institutions  = [node for node, nt in node_types.items() if nt == 'Institution']
 
-        # If there are insitutions, 
         if institutions:
-            selected_inst = st.selectbox("Select an Institution:", institutions)
+            # Pre-select an institution if one was navigated to from the graph
+            inst_index = 0
+            if st.session_state.selected_institution and st.session_state.selected_institution in institutions:
+                inst_index = institutions.index(st.session_state.selected_institution)
+                st.session_state.selected_institution = None  # consume
+
+            selected_inst = st.selectbox("Select an Institution:", institutions, index=inst_index)
 
             if selected_inst:
                 st.subheader(f"PI's at {selected_inst}")
-                # Pull institution PIs from KG Builder
                 inst_pis = st.session_state.kg.get_institution_pis(selected_inst)
 
                 if inst_pis:
                     st.write(f"**Total PIs:** {len(inst_pis)}")
                     
                     for pi in inst_pis:
-                        # Use get_pi_awards to get award count for each PI
                         pi_awards = st.session_state.kg.get_pi_awards(pi)
                         
                         with st.expander(f"👤 {pi}: {len(pi_awards)} award(s)"):
@@ -352,27 +469,27 @@ if st.session_state.loaded == True:
                 else:
                     st.info("No institutions found in the current graph")
 
-    # tab4
-    with tab4:
+    # Knowledge Graph
+    elif view == "Knowledge Graph":
         st.header("Knowledge graph visualization")
 
         st.markdown(
             """ 
             * **Hover** over a node to see details
+            * **Click** a PI, Institution, or Award node to navigate to it
             * **Drag** nodes to rearrange
             * **Scroll** to zoom
             * **Click and drag** the canvas to pan
             """
-        )        
+        )
 
-        # Controls 
         col_a, col_b, col_c = st.columns([1, 1, 2])
         with col_a:
             graph_height = st.slider("Graph height (px):", 400, 900, 620, step=50)
         with col_b:
             node_size = st.slider("Node size:", 8, 40, 18)
         with col_c:
-            physics_on = st.toggle("Physics / live layout", value=True)
+            physics_on    = st.toggle("Physics / live layout", value=True)
             show_subgraph = st.toggle(
                 "Show subgraph only",
                 value=False,
@@ -380,45 +497,45 @@ if st.session_state.loaded == True:
                 help="Toggle to view only the nodes returned by your Subgraph Query",
             )
 
-        # decide graph to render
         active_graph = st.session_state.kg.graph
-        graph_label = "Full Knowledge Graph"
+        graph_label  = "Full Knowledge Graph"
         if show_subgraph and st.session_state.subgraph is not None:
             active_graph = st.session_state.subgraph
-            graph_label = "Subgraph Query Result"
- 
+            graph_label  = "Subgraph Query Result"
+
         st.caption(
             f"**{graph_label}** — "
             f"{nx.number_of_nodes(active_graph)} nodes · "
             f"{nx.number_of_edges(active_graph)} edges"
         )
 
-        # Rendering graph
-
         with st.spinner("Rendering interactive graph…"):
             html_str = build_pyvis_html(active_graph, height=graph_height, physics=physics_on, node_size=node_size)
- 
+
         components.html(html_str, height=graph_height + 20, scrolling=False)
 
-    # tab5
-    with tab5:
+    # Awards
+    elif view == "Awards":
         st.header("Awards")
 
-        # Get all PI's from the graph
         node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
-        awards = [node for node, node_type in node_types.items() if node_type == 'Award']
-        
-        # If there are awards, 
+        awards     = [node for node, nt in node_types.items() if nt == 'Award']
+
         if awards:
-            selected_award = st.selectbox("Select an Award:", awards)
+            # Pre-select an award if one was navigated to from the graph
+            award_index = 0
+            if st.session_state.selected_award and st.session_state.selected_award in awards:
+                award_index = awards.index(st.session_state.selected_award)
+                st.session_state.selected_award = None  # consume
+
+            selected_award = st.selectbox("Select an Award:", awards, index=award_index)
 
             if selected_award:
-                award_id = selected_award.removeprefix("Award_")
+                award_id   = selected_award.removeprefix("Award_")
                 award_data = st.session_state.kg.graph.nodes[selected_award]
 
-                # Need to traverse nodes to get PI and CoPI data
-                neighbors = list(st.session_state.kg.graph.neighbors(selected_award))
-                pi_nodes = [n for n in neighbors if node_types.get(n) == 'PI']
+                neighbors  = list(st.session_state.kg.graph.neighbors(selected_award))
+                pi_nodes   = [n for n in neighbors if node_types.get(n) == 'PI']
                 copi_nodes = [n for n in neighbors if node_types.get(n) == 'Co-PI']
 
                 st.subheader(award_data.get('title', 'Untitled'))
@@ -430,15 +547,15 @@ if st.session_state.loaded == True:
                 st.write(f"**Co-Investigator:** {', '.join(copi_nodes) or 'N/A'}")
                 st.write(f"**Start Date:** {award_data.get('start_date', 'N/A')}")
                 st.write(f"**Abstract:** {award_data.get('abstract', 'N/A')}")
-            else: 
-                st.write(f"There is no data for this award.")
+            else:
+                st.write("There is no data for this award.")
         else:
-            st.info("No awards found in the current graph. ")
+            st.info("No awards found in the current graph.")
 
 else:
     st.info("Enter a query in the sidebar to get started")
 
-    # Example queries for funsies
+    # Example queries
     st.subheader("Example Queries:")
     examples = [
         "Water research in Tennessee",
