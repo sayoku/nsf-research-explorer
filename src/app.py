@@ -60,7 +60,7 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         # title, rendered as html on hover
         lines = [f"{node}", f"Type: {ntype}", "---"]
         for k, v in data.items(): # we now want the specific title
-            if k in ("type", "label", "color", "size", "nodeType"):
+            if k in ("type", "label", "color", "size"):
                 continue
             if k == "title":
                 if ntype == "Award" and v: 
@@ -88,21 +88,16 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         g.nodes[node]["label"] = label
         g.nodes[node]["color"] = COLORS.get(ntype)
         g.nodes[node]["size"] = node_size if ntype != "Topic" else max(node_size - 6, 8)
-        # Store nodeType as a node attribute so JS can read it on click
-        g.nodes[node]["nodeType"] = ntype
         
     # build network and load using from_nx()
     net = Network(height=f"{height}px", width="100%", bgcolor="#0F1117", font_color="#E8E8E8", directed=False)
     net.from_nx(g) # Translate nodes and edges
 
-    # Apply titles and nodeType AFTER from_nx so they aren't overwritten
+    # Apply titles and type after from_nx so they aren't overwritten
     for pyvis_node in net.nodes:
         nid = pyvis_node["id"]
         if nid in node_titles:
             pyvis_node["title"] = node_titles[nid]
-        # Ensure nodeType is on the vis.js node object
-        node_data = g.nodes.get(nid, {})
-        pyvis_node["nodeType"] = node_data.get("type", "")
 
     # Use physics thru barnes_hut()
     if physics: 
@@ -159,7 +154,7 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
           if (params.nodes.length === 0) return;
           var nodeId = params.nodes[0];
           var nodeData = nodes.get(nodeId);
-          var nodeType = nodeData ? nodeData.nodeType : "";
+          var nodeType = nodeData ? nodeData.type : "";
           var navigable = ["PI", "Co-PI", "Institution", "Award"];
           if (navigable.indexOf(nodeType) === -1) return;
           window.parent.postMessage({
