@@ -60,10 +60,11 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
         # title, rendered as html on hover
         lines = [f"{node}", f"Type: {ntype}", "---"]
         for k, v in data.items(): # we now want the specific title
+            if k in ("type", "label", "color", "size", "nodeType"):
+                continue
             if k == "title":
                 if ntype == "Award" and v: 
                     lines.append(f"title: {v}")
-            if k in ("type", "label", "color", "size", "nodeType"):
                 continue
             if k == "abstract" and v:
                 chunk = str(v)[:200] + ("…" if len(str(v)) > 200 else "")
@@ -519,7 +520,7 @@ if st.session_state.loaded:
         st.header("Awards")
 
         node_types = nx.get_node_attributes(st.session_state.kg.graph, 'type')
-        awards     = [node for node, nt in node_types.items() if nt == 'Award']
+        awards = [node for node, nt in node_types.items() if nt == 'Award']
 
         if awards:
             # Pre-select an award if one was navigated to from the graph
