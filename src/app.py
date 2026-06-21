@@ -12,6 +12,11 @@ from agent.tool import NSFAgent
 from kgraph.mem import KGBuilder
 from kgraph.query import KGQueryAgent 
 
+# Declare the click-bridge component (JS→Python channel for graph node clicks).
+# It lives in graph_click_bridge/index.html next to this file.
+_bridge_path = os.path.join(current_dir, "graph_click_bridge")
+graph_click_bridge = components.declare_component("graph_click_bridge", path=_bridge_path)
+
 @st.cache_resource
 def load_spacy_model():
     import spacy
@@ -215,26 +220,6 @@ if 'selected_copi' not in st.session_state:
 if 'selected_institution' not in st.session_state:
     st.session_state.selected_institution = None
 
-# Consume query params written by the postMessage receiver
-# The receiver snippet (rendered below) writes ?node=...&ntype=... then we
-# read + clear them here so the next rerun is clean
-qp = st.query_params
-if "node" in qp and st.session_state.loaded:
-    node_id = qp["node"]
-    node_type = qp.get("ntype", "")
-    if node_type == "Award":
-        st.session_state.active_view = "Awards"
-        st.session_state.selected_award = node_id
-    elif node_type == "PI":
-        st.session_state.active_view = "PIs"
-        st.session_state.selected_pi = node_id
-    elif node_type == "Co-PI":
-        st.session_state.active_view = "PIs"
-        st.session_state.selected_copi = node_id
-    elif node_type == "Institution":
-        st.session_state.active_view = "Institutions"
-        st.session_state.selected_institution = node_id
-    st.query_params.clear()
 
 # Sidebar 
 with st.sidebar:
@@ -295,22 +280,7 @@ with st.sidebar:
         st.session_state.subgraph = subgraph
 
 
-# Invisible postMessage receiver
-# This tiny component listens for graphNodeClick messages from the Pyvis iframe
-# and redirects the parent page to ?node=...&ntype=... which triggers a rerun.
-_receiver_html = """
-<script>
-window.addEventListener("message", function(event) {
-  var d = event.data;
-  if (!d || d.type !== "graphNodeClick") return;
-  var url = new URL(window.parent.location.href);
-  url.searchParams.set("node",  d.nodeId);
-  url.searchParams.set("ntype", d.nodeType);
-  window.parent.location.href = url.toString();
-});
-</script>
-"""
-components.html(_receiver_html, height=0, scrolling=False)
+
 
 # Top navigation — horizontal radio, only shown when data is loaded
 if st.session_state.loaded:
@@ -512,6 +482,27 @@ if st.session_state.loaded:
             html_str = build_pyvis_html(active_graph, height=graph_height, physics=physics_on, node_size=node_size)
 
         components.html(html_str, height=graph_height + 20, scrolling=False)
+
+        # Bridge component: receives graphNodeClick postMessages from the Pyvis iframe
+        # above and forwards them back to Python via the Streamlit component protocol.
+        # It renders invisibly (height=0) alongside the graph.
+        click_data = graph_click_bridge(key="gcb", default=None)
+        if click_data and st.session_state.loaded:
+            node_id   = click_data.get("nodeId", "")
+            node_type = click_data.get("nodeType", "")
+            if node_type == "Award":
+                st.session_state.active_view = "Awards"
+                st.session_state.selected_award = node_id
+            elif node_type == "PI":
+                st.session_state.active_view = "PIs"
+                st.session_state.selected_pi = node_id
+            elif node_type == "Co-PI":
+                st.session_state.active_view = "PIs"
+                st.session_state.selected_copi = node_id
+            elif node_type == "Institution":
+                st.session_state.active_view = "Institutions"
+                st.session_state.selected_institution = node_id
+            st.rerun()
 
     # Awards
     elif view == "Awards":
