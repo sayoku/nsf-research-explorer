@@ -93,11 +93,13 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
     net = Network(height=f"{height}px", width="100%", bgcolor="#0F1117", font_color="#E8E8E8", directed=False)
     net.from_nx(g) # Translate nodes and edges
 
-    # Apply titles and type after from_nx so they aren't overwritten
+    # Apply titles and nodeType after from_nx so they aren't overwritten
+    # Note: we use "nodeType" (not "type") because "type" is reserved by vis.js for node shapes
     for pyvis_node in net.nodes:
         nid = pyvis_node["id"]
         if nid in node_titles:
             pyvis_node["title"] = node_titles[nid]
+        pyvis_node["nodeType"] = g.nodes[nid].get("type", "")
 
     # Use physics thru barnes_hut()
     if physics: 
@@ -154,7 +156,7 @@ def build_pyvis_html(graph: nx.Graph, height: int = 600, physics: bool = True, n
           if (params.nodes.length === 0) return;
           var nodeId = params.nodes[0];
           var nodeData = nodes.get(nodeId);
-          var nodeType = nodeData ? nodeData.type : "";
+          var nodeType = nodeData ? nodeData.nodeType : "";
           var navigable = ["PI", "Co-PI", "Institution", "Award"];
           if (navigable.indexOf(nodeType) === -1) return;
           window.parent.postMessage({
@@ -292,21 +294,6 @@ with st.sidebar:
         # Store subgraph in session
         st.session_state.subgraph = subgraph
 
-    # View navigation - only when data is loaded 
-    if st.session_state.loaded:
-        st.divider()
-        st.header("Navigate")
-        views = ["Summary", "PIs", "Institutions", "Knowledge Graph", "Awards"]
-        chosen = st.radio(
-            "View:",
-            views,
-            index=views.index(st.session_state.active_view),
-            key="nav_radio",
-            label_visibility="collapsed",
-        )
-        if chosen != st.session_state.active_view:
-            st.session_state.active_view = chosen
-            st.rerun()
 
 # Invisible postMessage receiver
 # This tiny component listens for graphNodeClick messages from the Pyvis iframe
@@ -324,6 +311,22 @@ window.addEventListener("message", function(event) {
 </script>
 """
 components.html(_receiver_html, height=0, scrolling=False)
+
+# Top navigation — horizontal radio, only shown when data is loaded
+if st.session_state.loaded:
+    views = ["Summary", "PIs", "Institutions", "Knowledge Graph", "Awards"]
+    chosen = st.radio(
+        "View:",
+        views,
+        index=views.index(st.session_state.active_view),
+        key="nav_radio",
+        horizontal=True,
+        label_visibility="collapsed",
+    )
+    if chosen != st.session_state.active_view:
+        st.session_state.active_view = chosen
+        st.rerun()
+    st.divider()
 
 # Main content
 if st.session_state.loaded:
