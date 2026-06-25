@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<script>
+// Minimal Streamlit declared component bridge.
+// This component lives in a sandboxed iframe that shares the same parent window
+// as the Pyvis graph iframe. Because both are children of the Streamlit page:
+//   - The Pyvis iframe sends:  window.parent.postMessage({type:"graphNodeClick",...})
+//   - This bridge listens on:  window.parent  (same window object)
+//   - Then reports back to Streamlit via the standard component protocol.
+
+(function () {
+  // Step 1: Announce readiness to Streamlit so it registers this component instance.
+  window.parent.postMessage(
+    { type: "streamlit:componentReady", apiVersion: 1 },
+    "*"
+  );
+
+  // Step 2: Collapse the iframe to zero height (it's invisible).
+  window.parent.postMessage(
+    { type: "streamlit:setFrameHeight", height: 0 },
+    "*"
+  );
+
+  // Step 3: Listen on the PARENT window for graphNodeClick messages from the
+  // Pyvis sibling iframe. The Pyvis iframe sends to window.parent, which is the
+  // same window object we're attaching to here.
+  window.parent.addEventListener("message", function (event) {
+    var d = event.data;
+    if (!d || d.type !== "graphNodeClick") return;
+
+    // Step 4: Forward the click data back to Streamlit as the component's value.
+    window.parent.postMessage(
+      {
+        type: "streamlit:setComponentValue",
+        dataType: "json",
+        value: { nodeId: d.nodeId, nodeType: d.nodeType }
+      },
+      "*"
+    );
+  });
+})();
+</script>
+</body>
+</html>
