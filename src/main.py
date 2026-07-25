@@ -13,7 +13,6 @@ from kgraph.mem import KGBuilder
 from kgraph.query import KGQueryAgent 
 
 app = FastAPI()
-
 GRAPH_CACHE = "kg_cache.pkl"
 
 class QueryRequest(BaseModel):
