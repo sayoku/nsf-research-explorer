@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import networkx as nx
 import sys, os
 import pickle
+from fastapi.middleware.cors import CORSMiddleware
 
 # Add src to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -152,8 +153,6 @@ async def get_graph_stats():
         "edge_count": kg.graph.number_of_edges(),
         "density": nx.density(kg.graph) if kg.graph.number_of_nodes() > 0 else 0
     }
-
-from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
