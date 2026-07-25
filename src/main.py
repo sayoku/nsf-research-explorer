@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import networkx as nx
 import sys, os
- 
+import pickle
+
 # Add src to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, current_dir)
@@ -12,7 +13,8 @@ from kgraph.mem import KGBuilder
 from kgraph.query import KGQueryAgent 
 
 app = FastAPI()
-kg = KGBuilder()
+
+GRAPH_CACHE = "kg_cache.pkl"
 
 class QueryRequest(BaseModel):
     query: str
@@ -21,6 +23,18 @@ class QueryRequest(BaseModel):
 class SubqueryRequest(BaseModel):
     query: str
 
+def save_kg():
+    with open(GRAPH_CACHE, "wb") as f:
+        pickle.dump(kg, f)
+
+def load_kg():
+    if os.path.exists(GRAPH_CACHE): 
+        with open(GRAPH_CACHE, "rb") as f:
+            return pickle.load(f)
+    return KGBuilder()
+
+kg = load_kg()
+
 @app.get("/")
 async def root():
     return {"message": "NSF Research Explorer API"}
@@ -28,6 +42,7 @@ async def root():
 @app.post("/api/query/")
 async def run_nsf_query(req: QueryRequest):
     summary = kg.load_query_results(req.query, req.max_awards)
+    save_kg()
     if summary: 
         return {"summary": summary, "stats": kg.get_deduplication_stats()}
     else: 
@@ -50,6 +65,8 @@ async def run_graph_subquery(req: SubqueryRequest):
 async def reset_graph():
     global kg
     kg = KGBuilder()
+    if os.path.exists(GRAPH_CACHE):
+        os.remove(GRAPH_CACHE)
     return {"message": "Graph cleared"}
 
 # GET - PI's
