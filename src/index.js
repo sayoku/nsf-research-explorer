@@ -6,7 +6,7 @@ let query = "water research in Tennessee"
 console.log(`Searching for: ${query}, max awards: ${maxAwards}`)
 
 // arrow function
-const buildRequest = (query, maxAward) => ({
+const buildRequest = (query, maxAwards) => ({
     method: "POST",
     headers: { "Content-Type": "application/json"},
     body: JSON.stringify({query: query, max_awards: maxAwards})
@@ -17,6 +17,7 @@ const runQuery = async () => {
     console.log("Fetching...")
 
     const response = await fetch("http://localhost:8000/api/query/", buildRequest(query, maxAwards))
+    const data = await response.json()
 
     console.log("Summary:", data.summary)
     console.log("Stats:", data.stats)
