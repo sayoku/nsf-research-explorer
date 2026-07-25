@@ -32,15 +32,32 @@ class SubqueryRequest(BaseModel):
     query: str
 
 def save_kg():
+    data = {
+        "graph": nx.node_link_data(kg.graph),
+        "pi_names": kg.pi_names,
+        "copi_names": kg.copi_names,
+        "institution_names": kg.institution_names,
+        "award_ids": kg.award_ids,
+    }
     with open(GRAPH_CACHE, "wb") as f:
-        pickle.dump(kg, f)
+        pickle.dump(data, f)
 
 def load_kg():
-    if os.path.exists(GRAPH_CACHE): 
-        with open(GRAPH_CACHE, "rb") as f:
-            return pickle.load(f)
+    if os.path.exists(GRAPH_CACHE):
+        try:
+            with open(GRAPH_CACHE, "rb") as f:
+                data = pickle.load(f)
+            builder = KGBuilder()
+            builder.graph = nx.node_link_graph(data["graph"])
+            builder.pi_names = data["pi_names"]
+            builder.copi_names = data["copi_names"]
+            builder.institution_names = data["institution_names"]
+            builder.award_ids = data["award_ids"]
+            return builder
+        except Exception as e:
+            print(f"Cache load failed ({e}), starting fresh")
+            os.remove(GRAPH_CACHE)
     return KGBuilder()
-
 kg = load_kg()
 
 @app.get("/")
