@@ -14,6 +14,14 @@ from kgraph.mem import KGBuilder
 from kgraph.query import KGQueryAgent 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # 5173 is React's default port later
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 GRAPH_CACHE = "kg_cache.pkl"
 
 class QueryRequest(BaseModel):
@@ -154,9 +162,3 @@ async def get_graph_stats():
         "density": nx.density(kg.graph) if kg.graph.number_of_nodes() > 0 else 0
     }
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # 5173 is React's default port later
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
