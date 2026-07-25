@@ -16,7 +16,7 @@ const buildRequest = (query, maxAward) => ({
 const runQuery = async () => {
     console.log("Fetching...")
 
-    const response = await fetch("http://localhost:8000/api/query/", buildRequest(query, maxAward))
+    const response = await fetch("http://localhost:8000/api/query/", buildRequest(query, maxAwards))
 
     console.log("Summary:", data.summary)
     console.log("Stats:", data.stats)
