@@ -152,3 +152,12 @@ async def get_graph_stats():
         "edge_count": kg.graph.number_of_edges(),
         "density": nx.density(kg.graph) if kg.graph.number_of_nodes() > 0 else 0
     }
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # 5173 is React's default port later
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
