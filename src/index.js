@@ -24,9 +24,9 @@ const runQuery = async (query) => {
 }
 
 // Grab form and listen for submit
-const form = document.getElemendById("search-form")
-form.addEventListener("sumbit", (event) => {
+const form = document.getElementById("search-form")
+form.addEventListener("submit", (event) => {
     event.preventDefault() 
     const query = document.getElementById("query").value
-    runQuery()
+    runQuery(query)
 })
