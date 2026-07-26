@@ -1,10 +1,3 @@
-// const/let 
-const maxAwards = 5
-let query = "water research in Tennessee"
-
-// template literals 
-console.log(`Searching for: ${query}, max awards: ${maxAwards}`)
-
 // arrow function
 const buildRequest = (query, maxAwards) => ({
     method: "POST",
@@ -13,14 +6,16 @@ const buildRequest = (query, maxAwards) => ({
 })
 
 // fetch + async/wait
-const runQuery = async () => {
+const runQuery = async (query) => {
     console.log("Fetching...")
 
-    const response = await fetch("http://localhost:8000/api/query/", buildRequest(query, maxAwards))
+    const response = await fetch("http://localhost:8000/api/query/", buildRequest(query, 5))
     const data = await response.json()
 
     console.log("Summary:", data.summary)
     console.log("Stats:", data.stats)
+
+    document.getElementById("summary").textContext = data.summary
 
     // .map() - iterate over something in the response
     // run /api/pis/
@@ -28,4 +23,10 @@ const runQuery = async () => {
     // console.log(piNames)
 }
 
-runQuery()
+// Grab form and listen for submit
+const form = document.getElemendById("search-form")
+form.addEventListener("sumbit", (event) => {
+    event.preventDefault() 
+    const query = document.getElementById("query").value
+    runQuery()
+})

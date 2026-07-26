@@ -3,11 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Web Page</title>
+    <title>NSF Research Award Explorer</title>
 </head>
 <body>
-    <h1>Hello, World!</h1>
-    <p>This is a standard HTML5 document structure.</p>
+    <h1>NSF Research Award Explorer</h1>
+    <p>Explore NSF grants using natural language queries and knowledge graph visualization</p>
+    <form id="search-form">
+        <label for="query">Enter your search query:</label>
+        <input type="text"id="query" name="query"required/>
+        <input type="submit" value="Send Query"/>
+    </form>
+    <div id="Summary"></div>
     <script src="index.js" defer></script>
 </body>
 </html>
