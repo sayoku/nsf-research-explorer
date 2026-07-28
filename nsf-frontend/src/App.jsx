@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ReactMarkdown from "react-markdown"
 import PIsList from '../components/PIsList'
 import InstitutionsList from '../components/InstitutionsList'
@@ -10,7 +10,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [awards, setAwards] = useState([])
   const [pis, setPIs] = useState([])
-  const [institutions, Institutions] = useState([])
+  const [institutions, setInstitutions] = useState([])
   const [error, setError] = useState(null)
 
 
@@ -27,8 +27,33 @@ function App() {
 
     setSummary(data.summary)
     setIsLoading(false)
+
+    fetchAll() // refetch the lists to account for growing graph
   }
-  return (
+
+  const fetchAll = async () => {
+    setError(null)
+    try {
+      const [awardsRes, pisRes, instRes] = await Promise.all([
+        fetch("http://localhost:8000/api/awards/"),
+        fetch("http://localhost:8000/api/pis/"),
+        fetch("http://localhost:8000/api/institutions/"),
+      ])
+      if (!awardsRes.ok || !pisRes.ok || !instRes.ok) {
+        throw new Error("One or more requests failed")
+      }
+      setAwards(await awardsRes.json())
+      setPIs(await pisRes.json())
+      setInstitutions(await instRes.json())
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+  useEffect(() => { 
+    fetchAll()
+  }, [])
+
+return (
     <div>
       <h1>NSF Research Award Explorer</h1>
       <p>Explore NSF grants using natural language queries</p>
@@ -46,52 +71,15 @@ function App() {
       </form>
 
       {summary && <ReactMarkdown>{summary}</ReactMarkdown>}
-    </div>
-  )
-}
-
-
-  useEffect(() => {
-    async function fetchAll() {
-      setLoading(true);
-      setError(null);
-      try {
-        const [awardsRes, pisRes, instRes] = await Promise.all([
-          fetch("http://localhost:8000/api/awards/"),
-          fetch("http://localhost:8000/api/pis/"),
-          fetch("http://localhost:8000/api/institutions/"),
-        ]);
-        if (!awardsRes.ok || !pisRes.ok || !instRes.ok) {
-          throw new Error("One or more requests failed");
-        }
-        setAwards(await awardsRes.json());
-        setPIs(await pisRes.json());
-        setInstitutions(await instRes.json());
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchAll();
-  }, []);
-
-  return (
-    <div className="app">
-      {/* existing query/summary UI */}
-
-      {loading && <p>Loading...</p>}
       {error && <p className="error">Error: {error}</p>}
 
-      {!loading && !error && (
-        <>
-          <PIsList pis={pis} />
-          <InstitutionsList institutions={institutions} />
-          <AwardsTable awards={awards} />
-        </>
-      )}
+      <PIsList pis={pis} />
+      <InstitutionsList institutions={institutions} />
+      <AwardsTable awards={awards} />
     </div>
-  );
+  )
+
+} 
 
 export default App
 
