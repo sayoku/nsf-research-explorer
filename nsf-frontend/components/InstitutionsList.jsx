@@ -6,12 +6,11 @@ export default function InstitutionsList({institutions, onSelectInstitution}) {
     // else return pi list and button to select the pi
     return (
         <ul className="institutions-list">
-            {institutions.map((pi) => ( 
-                <li key={insitution.name}> 
-                    <button onClick = {() => onSelectInstitution?.(insitution.name)}>
-                        {insitution.name}
+            {institutions.map((instName) => ( 
+                <li key={instName}> 
+                    <button onClick = {() => onSelectInstitution?.(instName)}>
+                        {instName}
                     </button>
-                    {institution.role && <span className="institution-role">{institution.role}</span>}
                 </li>
             ))}
         </ul>

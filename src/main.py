@@ -127,8 +127,8 @@ async def get_institutions():
 @app.get("/api/institutions/{inst}/")
 async def get_institution_pis(inst: str):
     inst_pis = kg.get_institution_pis(inst)
+    result = {}
     if inst_pis: 
-        result = {}
         for pi in inst_pis:
             result[pi] = kg.get_pi_awards(pi)
     return {"institution": inst, "pi_awards": result}

@@ -6,12 +6,11 @@ export default function PIsList({pis, onSelectPI}) {
     // else return pi list and button to select the pi
     return (
         <ul className="pis-list">
-            {pis.map((pi) => ( 
-                <li key={pi.name}> 
-                    <button onClick = {() => onSelectPI?.(pi.name)}>
-                        {pi.name}
+            {pis.map((piName) => ( 
+                <li key={piName}> 
+                    <button onClick = {() => onSelectPI?.(piName)}>
+                        {piName}
                     </button>
-                    {pi.role && <span className="pi-role">{pi.role}</span>}
                 </li>
             ))}
         </ul>

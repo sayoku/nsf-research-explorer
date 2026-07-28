@@ -3,36 +3,54 @@ import ReactMarkdown from "react-markdown"
 import PIsList from '../components/PIsList'
 import InstitutionsList from '../components/InstitutionsList'
 import AwardsTable from '../components/AwardsTable'
+import PIDetail from '../components/PIDetail.jsx'
+import InstitutionDetail from '../components/InstitutionDetail.jsx'
 
 function App() {
   const [query, setQuery] = useState("")
   const [summary, setSummary] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [searchError, setSearchError] = useState(null)
+
   const [awards, setAwards] = useState([])
   const [pis, setPIs] = useState([])
   const [institutions, setInstitutions] = useState([])
-  const [error, setError] = useState(null)
+  const [listsLoading, setListsLoading] = useState(false)  
+  const [listsError, setListsError] = useState(null)
 
+  const [selectedPI, setSelectedPI] = useState(null)
+  const [piDetail, setPiDetail] = useState(null)
+  const [piDetailLoading, setPiDetailLoading] = useState(false)
+  const [piDetailError, setPiDetailError] = useState(null)
+
+  const [selectedInst, setSelectedInst] = useState(null)
+  const [institutionDetail, setInstitutionDetail] = useState(null)
+  const [instDetailLoading, setInstDetailLoading] = useState(false)
+  const [instDetailError, setInstDetailError] = useState(null)
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsLoading(true)
-    // next line hits the fastapi endpoint
-    const response = await fetch("http://localhost:8000/api/query/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: query, max_awards: 5 })
-    })
-    const data = await response.json()
-
-    setSummary(data.summary)
-    setIsLoading(false)
-
-    fetchAll() // refetch the lists to account for growing graph
+    try {
+      const response = await fetch("http://localhost:8000/api/query/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query, max_awards: 5 })
+      })
+      if (!response.ok) {
+        throw new Error(`Search failed (status ${response.status})`)
+      }
+      const data = await response.json()
+      setSummary(data.summary)
+      fetchAll() // refetch the lists to account for growing graph
+    } catch (err) {
+      setSearchError(err.message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const fetchAll = async () => {
-    setError(null)
+    setListsLoading(true)
+    setListsError(null)
     try {
       const [awardsRes, pisRes, instRes] = await Promise.all([
         fetch("http://localhost:8000/api/awards/"),
@@ -42,16 +60,57 @@ function App() {
       if (!awardsRes.ok || !pisRes.ok || !instRes.ok) {
         throw new Error("One or more requests failed")
       }
-      setAwards(await awardsRes.json())
-      setPIs(await pisRes.json())
-      setInstitutions(await instRes.json())
+      const awardsData = await awardsRes.json()
+      const pisData = await pisRes.json()
+      const instData = await instRes.json()
+      
+      setAwards(awardsData.awards)
+      setPIs(pisData.pis) // pisData.copis also exists lol
+      setInstitutions(instData.institutions)
     } catch (err) {
-      setError(err.message)
+      setListsError(err.message)
+    } finally {
+      setListsLoading(false)
     }
   }
   useEffect(() => { 
     fetchAll()
   }, [])
+
+  const handleSelectPI = async (piName) => {
+    setSelectedPI(piName)
+    setPiDetailLoading(true)
+    setPiDetailError(null)
+    try {
+      const res = await fetch(`http://localhost:8000/api/pis/${encodeURIComponent(piName)}/`)
+      if (!res.ok) {
+        throw new Error(`Could not load details for ${piName}`)
+      }
+      const data = await res.json()
+      setPiDetail(data)
+    } catch (err) {
+      setPiDetailError(err.message)
+    } finally {
+      setPiDetailLoading(false)
+    }
+  }
+  const handleSelectInstitution = async (instName) => {
+    setSelectedInst(instName)
+    setInstDetailLoading(true)
+    setInstDetailError(null)
+    try {
+      const res = await fetch(`http://localhost:8000/api/institutions/${encodeURIComponent(instName)}/`)
+      if (!res.ok) {
+        throw new Error(`Could not load details for ${instName}`)
+      }
+      const data = await res.json()
+      setInstitutionDetail(data)
+    } catch (err) {
+      setInstDetailError(err.message)
+    } finally {
+      setInstDetailLoading(false)
+    }
+  }
 
 return (
     <div>
@@ -70,17 +129,36 @@ return (
         </button>
       </form>
 
+      {searchError && <p className="error">Error: {searchError}</p>}
       {summary && <ReactMarkdown>{summary}</ReactMarkdown>}
-      {error && <p className="error">Error: {error}</p>}
 
-      <PIsList pis={pis} />
-      <InstitutionsList institutions={institutions} />
-      <AwardsTable awards={awards} />
+      <hr />
+
+      {listsLoading && <p>Loading PIs, institutions, and awards...</p>}
+      {listsError && <p className="error">Error: {listsError}</p>}
+
+      {!listsLoading && !listsError && (
+        <>
+          <PIsList pis={pis} onSelectPI={handleSelectPI} />
+          {selectedPI && (
+            piDetailError
+              ? <p className="error">Error: {piDetailError}</p>
+              : <PIDetail detail={piDetail} loading={piDetailLoading} />
+          )}
+
+          <InstitutionsList institutions={institutions} onSelectInstitution={handleSelectInstitution} />
+          {selectedInst && (
+            instDetailError
+              ? <p className="error">Error: {instDetailError}</p>
+              : <InstitutionDetail detail={institutionDetail} loading={instDetailLoading} />
+          )}
+
+          <AwardsTable awards={awards} />
+        </>
+      )}
     </div>
   )
 
-} 
+}
 
 export default App
-
-

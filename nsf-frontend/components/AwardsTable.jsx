@@ -7,21 +7,13 @@ export default function AwardsTable({ awards, onSelectAward }) {
     <table className="awards-table">
       <thead>
         <tr>
-          <th>Award #</th>
-          <th>Title</th>
-          <th>PI</th>
-          <th>Institution</th>
-          <th>Amount</th>
+          <th>Award</th>
         </tr>
       </thead>
       <tbody>
-        {awards.map((award) => (
-          <tr key={award.award_id} onClick={() => onSelectAward?.(award.award_id)}>
-            <td>{award.award_id}</td>
-            <td>{award.title}</td>
-            <td>{award.pi_name}</td>
-            <td>{award.institution}</td>
-            <td>{award.amount ? `$${award.amount.toLocaleString()}` : "—"}</td>
+        {awards.map((awardId) => (
+          <tr key={awardId} onClick={() => onSelectAward?.(awardId)}>
+            <td>{awardId}</td>
           </tr>
         ))}
       </tbody>
