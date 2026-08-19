@@ -1,22 +1,24 @@
-export default function AwardsTable({ awards, onSelectAward }) {
-  if (!awards || awards.length === 0) {
-    return <p className="empty-state">No awards to display.</p>;
-  }
+function AwardsTable({ awards, onSelectAward }) {
+  if (!awards || awards.length === 0) return <p>No awards loaded yet.</p>
 
   return (
-    <table className="awards-table">
+    <table>
       <thead>
-        <tr>
-          <th>Award</th>
-        </tr>
+        <tr><th>Award ID</th></tr>
       </thead>
       <tbody>
-        {awards.map((awardId) => (
-          <tr key={awardId} onClick={() => onSelectAward?.(awardId)}>
-            <td>{awardId}</td>
+        {awards.map((award) => (
+          <tr key={award}>
+            <td>
+              <button type="button" onClick={() => onSelectAward(award)}>
+                {award}
+              </button>
+            </td>
           </tr>
         ))}
       </tbody>
     </table>
-  );
+  )
 }
+
+export default AwardsTable
