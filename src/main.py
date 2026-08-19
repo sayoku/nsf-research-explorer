@@ -140,7 +140,7 @@ async def get_awards():
     return {"awards": [n for n, t in node_types.items() if t == "Award"]}
 
 # A specific award
-@app.get("/api/awards/{award}")
+@app.get("/api/awards/{award}/")
 async def get_award(award: str):
     if award not in kg.graph: 
         return {"error": "award not found"}

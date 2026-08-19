@@ -5,6 +5,7 @@ import InstitutionsList from '../components/InstitutionsList'
 import AwardsTable from '../components/AwardsTable'
 import PIDetail from '../components/PIDetail.jsx'
 import InstitutionDetail from '../components/InstitutionDetail.jsx'
+import AwardDetail from '../components/AwardDetail.jsx'
 
 function App() {
   const [query, setQuery] = useState("")
@@ -28,7 +29,15 @@ function App() {
   const [instDetailLoading, setInstDetailLoading] = useState(false)
   const [instDetailError, setInstDetailError] = useState(null)
 
+  const [selectedAward, setSelectedAward] = useState(null)
+  const [awardDetail, setAwardDetail] = useState(null)
+  const [awardDetailLoading, setAwardDetailLoading] = useState(false)
+  const [awardDetailError, setAwardDetailError] = useState(null)
+
   const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setSearchError(null)
     try {
       const response = await fetch("http://localhost:8000/api/query/", {
         method: "POST",
@@ -112,6 +121,24 @@ function App() {
     }
   }
 
+  const handleSelectAward = async (awardName) => {
+  setSelectedAward(awardName)
+  setAwardDetailLoading(true)
+  setAwardDetailError(null)
+  try {
+    const res = await fetch(`http://localhost:8000/api/awards/${encodeURIComponent(awardName)}`)
+    if (!res.ok) {
+      throw new Error(`Could not load details for ${awardName}`)
+    }
+    const data = await res.json()
+    setAwardDetail(data)
+  } catch (err) {
+    setAwardDetailError(err.message)
+  } finally {
+    setAwardDetailLoading(false)
+  }
+}
+
 return (
     <div>
       <h1>NSF Research Award Explorer</h1>
@@ -153,7 +180,12 @@ return (
               : <InstitutionDetail detail={institutionDetail} loading={instDetailLoading} />
           )}
 
-          <AwardsTable awards={awards} />
+          <AwardsTable awards={awards} onSelectAward={handleSelectAward} />
+          {selectedAward && (
+            awardDetailError
+              ? <p className="error">Error: {awardDetailError}</p>
+              : <AwardDetail detail={awardDetail} loading={awardDetailLoading} />
+          )}
         </>
       )}
     </div>
