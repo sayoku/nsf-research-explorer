@@ -6,6 +6,8 @@ import AwardsTable from '../components/AwardsTable'
 import PIDetail from '../components/PIDetail.jsx'
 import InstitutionDetail from '../components/InstitutionDetail.jsx'
 import AwardDetail from '../components/AwardDetail.jsx'
+import GraphCanvas from '../components/GraphCanvas.jsx'
+import SubgraphQuery from '../components/SubgraphQuery.jsx'
 
 function App() {
   const [query, setQuery] = useState("")
@@ -33,6 +35,10 @@ function App() {
   const [awardDetail, setAwardDetail] = useState(null)
   const [awardDetailLoading, setAwardDetailLoading] = useState(false)
   const [awardDetailError, setAwardDetailError] = useState(null)
+
+  const [fullGraph, setFullGraph] = useState(null)
+  const [activeGraph, setActiveGraph] = useState(null)
+  const [graphExplanation, setGraphExplanation] = useState(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -82,9 +88,6 @@ function App() {
       setListsLoading(false)
     }
   }
-  useEffect(() => { 
-    fetchAll()
-  }, [])
 
   const handleSelectPI = async (piName) => {
     setSelectedPI(piName)
@@ -139,6 +142,25 @@ function App() {
   }
 }
 
+const fetchFullGraph = async () => {
+  const res = await fetch("http://localhost:8000/api/graph/")
+  const data = await res.json()
+  if (data.graph) {
+    setFullGraph(data.graph)
+    setActiveGraph(data.graph)
+  }
+}
+
+useEffect(() => {
+  fetchAll()
+  fetchFullGraph()
+}, [])
+
+const handleSubqueryResult = (graph, explanation) => {
+  setActiveGraph(graph)
+  setGraphExplanation(explanation)
+}
+
 return (
     <div>
       <h1>NSF Research Award Explorer</h1>
@@ -188,9 +210,16 @@ return (
           )}
         </>
       )}
+
+      <hr />
+      <h2>Knowledge Graph</h2>
+      <SubgraphQuery onResult={handleSubqueryResult} />
+      {graphExplanation && <p><em>{graphExplanation}</em></p>}
+      <button onClick={() => setActiveGraph(fullGraph)}>Reset to full graph</button>
+      <GraphCanvas graphData={activeGraph} />
+
     </div>
   )
-
 }
 
 export default App
