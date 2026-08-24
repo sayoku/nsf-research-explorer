@@ -45,15 +45,7 @@ function App() {
     setIsLoading(true)
     setSearchError(null)
     try {
-      const response = await fetch("http://localhost:8000/api/query/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: query, max_awards: 5 })
-      })
-      if (!response.ok) {
-        throw new Error(`Search failed (status ${response.status})`)
-      }
-      const data = await response.json()
+      const data = await api.runQuery(query, 5)
       setSummary(data.summary)
       fetchAll() // refetch the lists to account for growing graph
     } catch (err) {
@@ -68,17 +60,11 @@ function App() {
     setListsError(null)
     try {
       const [awardsRes, pisRes, instRes] = await Promise.all([
-        fetch("http://localhost:8000/api/awards/"),
-        fetch("http://localhost:8000/api/pis/"),
-        fetch("http://localhost:8000/api/institutions/"),
+        api.getAwards(),
+        api.getPIs(),
+        api.getInstitutions(),
       ])
-      if (!awardsRes.ok || !pisRes.ok || !instRes.ok) {
-        throw new Error("One or more requests failed")
-      }
-      const awardsData = await awardsRes.json()
-      const pisData = await pisRes.json()
-      const instData = await instRes.json()
-      
+  
       setAwards(awardsData.awards)
       setPIs(pisData.pis) // pisData.copis also exists lol
       setInstitutions(instData.institutions)
@@ -89,16 +75,25 @@ function App() {
     }
   }
 
+  const fetchFullGraph = async () => {
+    const data = await api.getGraph()
+    if (data.graph) {
+      setFullGraph(data.graph)
+      setActiveGraph(data.graph)
+    }
+  }
+
+  useEffect(() => {
+    fetchAll()
+    fetchFullGraph()
+  }, [])
+
   const handleSelectPI = async (piName) => {
     setSelectedPI(piName)
     setPiDetailLoading(true)
     setPiDetailError(null)
     try {
-      const res = await fetch(`http://localhost:8000/api/pis/${encodeURIComponent(piName)}/`)
-      if (!res.ok) {
-        throw new Error(`Could not load details for ${piName}`)
-      }
-      const data = await res.json()
+      const data = await api.getPI(piName)
       setPiDetail(data)
     } catch (err) {
       setPiDetailError(err.message)
@@ -111,11 +106,7 @@ function App() {
     setInstDetailLoading(true)
     setInstDetailError(null)
     try {
-      const res = await fetch(`http://localhost:8000/api/institutions/${encodeURIComponent(instName)}/`)
-      if (!res.ok) {
-        throw new Error(`Could not load details for ${instName}`)
-      }
-      const data = await res.json()
+      const data = await api.getInstitution(instName)
       setInstitutionDetail(data)
     } catch (err) {
       setInstDetailError(err.message)
@@ -129,11 +120,7 @@ function App() {
   setAwardDetailLoading(true)
   setAwardDetailError(null)
   try {
-    const res = await fetch(`http://localhost:8000/api/awards/${encodeURIComponent(awardName)}`)
-    if (!res.ok) {
-      throw new Error(`Could not load details for ${awardName}`)
-    }
-    const data = await res.json()
+    const data = await api.getAward(awardName)
     setAwardDetail(data)
   } catch (err) {
     setAwardDetailError(err.message)
@@ -142,21 +129,8 @@ function App() {
   }
 }
 
-const fetchFullGraph = async () => {
-  const res = await fetch("http://localhost:8000/api/graph/")
-  const data = await res.json()
-  if (data.graph) {
-    setFullGraph(data.graph)
-    setActiveGraph(data.graph)
-  }
-}
-
-useEffect(() => {
-  fetchAll()
-  fetchFullGraph()
-}, [])
-
-const handleSubqueryResult = (graph, explanation) => {
+const handleSubqueryResult = async (queryText) => {
+  const data = await api.subquery(queryText)
   setActiveGraph(graph)
   setGraphExplanation(explanation)
 }

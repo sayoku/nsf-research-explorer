@@ -10,14 +10,7 @@ function SubgraphQuery({ onResult }) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("http://localhost:8000/api/graph/subgraph/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      })
-      if (!res.ok) throw new Error(`Subquery failed (status ${res.status})`)
-      const data = await res.json()
-      onResult(data.graph, data.explanation)
+      await onResult(query)
     } catch (err) {
       setError(err.message)
     } finally {
