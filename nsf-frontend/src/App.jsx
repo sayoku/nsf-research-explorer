@@ -132,8 +132,8 @@ function App() {
 
 const handleSubqueryResult = async (queryText) => {
   const data = await api.subquery(queryText)
-  setActiveGraph(graph)
-  setGraphExplanation(explanation)
+  setActiveGraph(data.graph)
+  setGraphExplanation(data.explanation)
 }
 
 return (
