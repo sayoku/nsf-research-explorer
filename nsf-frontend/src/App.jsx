@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import ReactMarkdown from "react-markdown"
-import {api} from '../api.js'
+import {api} from './api.js'
 import PIsList from '../components/PIsList'
 import InstitutionsList from '../components/InstitutionsList'
 import AwardsTable from '../components/AwardsTable'
@@ -60,7 +60,7 @@ function App() {
     setListsLoading(true)
     setListsError(null)
     try {
-      const [awardsRes, pisRes, instRes] = await Promise.all([
+      const [awardsData, pisData, instData] = await Promise.all([
         api.getAwards(),
         api.getPIs(),
         api.getInstitutions(),
