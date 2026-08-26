@@ -9,8 +9,11 @@ import InstitutionDetail from '../components/InstitutionDetail.jsx'
 import AwardDetail from '../components/AwardDetail.jsx'
 import GraphCanvas from '../components/GraphCanvas.jsx'
 import SubgraphQuery from '../components/SubgraphQuery.jsx'
+import NavTabs from '../components/NavTabs.jsx'
 
 function App() {
+  const [activeTab, setActiveTab] = useState("search")
+
   const [query, setQuery] = useState("")
   const [summary, setSummary] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -140,6 +143,39 @@ return (
     <div>
       <h1>NSF Research Award Explorer</h1>
       <p>Explore NSF grants using natural language queries</p>
+
+      <NavTabs active={activeTab} onChange={setActiveTab} />
+
+      {activeTab === "search" && (
+        <>
+          <form onSubmit={handleSubmit}>
+            {/* existing search input/button */}
+          </form>
+          {searchError && <p className="error">Error: {searchError}</p>}
+          {summary && <ReactMarkdown>{summary}</ReactMarkdown>}
+        </>
+      )}
+
+      {activeTab === "directory" && (
+        <>
+          {listsLoading && <p>Loading PIs, institutions, and awards...</p>}
+          {listsError && <p className="error">Error: {listsError}</p>}
+          {!listsLoading && !listsError && (
+            <>
+              {/* existing PIsList, InstitutionsList, AwardsTable + their detail panels */}
+            </>
+          )}
+        </>
+      )}
+
+      {activeTab === "graph" && (
+        <>
+          <SubgraphQuery onResult={handleSubqueryResult} />
+          {graphExplanation && <p><em>{graphExplanation}</em></p>}
+          <button onClick={() => setActiveGraph(fullGraph)}>Reset to full graph</button>
+          <GraphCanvas graphData={activeGraph} />
+        </>
+      )}
 
       <form onSubmit={handleSubmit}>
         <input
