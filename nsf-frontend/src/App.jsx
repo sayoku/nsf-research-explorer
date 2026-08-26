@@ -68,7 +68,6 @@ function App() {
         api.getPIs(),
         api.getInstitutions(),
       ])
-  
       setAwards(awardsData.awards)
       setPIs(pisData.pis) // pisData.copis also exists lol
       setInstitutions(instData.institutions)
@@ -149,7 +148,15 @@ return (
       {activeTab === "search" && (
         <>
           <form onSubmit={handleSubmit}>
-            {/* existing search input/button */}
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="e.g. Water research in Tennessee"
+            />
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Searching..." : "Search"}
+        </button>
           </form>
           {searchError && <p className="error">Error: {searchError}</p>}
           {summary && <ReactMarkdown>{summary}</ReactMarkdown>}
@@ -160,9 +167,29 @@ return (
         <>
           {listsLoading && <p>Loading PIs, institutions, and awards...</p>}
           {listsError && <p className="error">Error: {listsError}</p>}
+          
           {!listsLoading && !listsError && (
             <>
-              {/* existing PIsList, InstitutionsList, AwardsTable + their detail panels */}
+              <PIsList pis={pis} onSelectPI={handleSelectPI} />
+              {selectedPI && (
+                piDetailError
+                  ? <p className="error">Error: {piDetailError}</p>
+                  : <PIDetail detail={piDetail} loading={piDetailLoading} />
+              )}
+
+              <InstitutionsList institutions={institutions} onSelectInstitution={handleSelectInstitution} />
+              {selectedInst && (
+                instDetailError
+                  ? <p className="error">Error: {instDetailError}</p>
+                  : <InstitutionDetail detail={institutionDetail} loading={instDetailLoading} />
+              )}
+
+              <AwardsTable awards={awards} onSelectAward={handleSelectAward} />
+              {selectedAward && (
+                awardDetailError
+                  ? <p className="error">Error: {awardDetailError}</p>
+                  : <AwardDetail detail={awardDetail} loading={awardDetailLoading} />
+              )}
             </>
           )}
         </>
@@ -176,59 +203,6 @@ return (
           <GraphCanvas graphData={activeGraph} />
         </>
       )}
-
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="e.g. Water research in Tennessee"
-        />
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Searching..." : "Search"}
-        </button>
-      </form>
-
-      {searchError && <p className="error">Error: {searchError}</p>}
-      {summary && <ReactMarkdown>{summary}</ReactMarkdown>}
-
-      <hr />
-
-      {listsLoading && <p>Loading PIs, institutions, and awards...</p>}
-      {listsError && <p className="error">Error: {listsError}</p>}
-
-      {!listsLoading && !listsError && (
-        <>
-          <PIsList pis={pis} onSelectPI={handleSelectPI} />
-          {selectedPI && (
-            piDetailError
-              ? <p className="error">Error: {piDetailError}</p>
-              : <PIDetail detail={piDetail} loading={piDetailLoading} />
-          )}
-
-          <InstitutionsList institutions={institutions} onSelectInstitution={handleSelectInstitution} />
-          {selectedInst && (
-            instDetailError
-              ? <p className="error">Error: {instDetailError}</p>
-              : <InstitutionDetail detail={institutionDetail} loading={instDetailLoading} />
-          )}
-
-          <AwardsTable awards={awards} onSelectAward={handleSelectAward} />
-          {selectedAward && (
-            awardDetailError
-              ? <p className="error">Error: {awardDetailError}</p>
-              : <AwardDetail detail={awardDetail} loading={awardDetailLoading} />
-          )}
-        </>
-      )}
-
-      <hr />
-      <h2>Knowledge Graph</h2>
-      <SubgraphQuery onResult={handleSubqueryResult} />
-      {graphExplanation && <p><em>{graphExplanation}</em></p>}
-      <button onClick={() => setActiveGraph(fullGraph)}>Reset to full graph</button>
-      <GraphCanvas graphData={activeGraph} />
-
     </div>
   )
 }
