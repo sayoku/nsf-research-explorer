@@ -1,4 +1,4 @@
-function CoPIsList({ copis, onSelectCoPI }) {
+function CoPIList({ copis, onSelectCoPI }) {
   if (!copis || copis.length === 0) return <p>No co-PIs loaded yet.</p>
 
   return (
@@ -14,4 +14,4 @@ function CoPIsList({ copis, onSelectCoPI }) {
   )
 }
 
-export default CoPIsList
+export default CoPIList

@@ -116,7 +116,7 @@ async def get_specific_copi(copi_name: str):
     awards = kg.get_copi_awards(copi_name)
     award_details = [{"id": a, **kg.graph.nodes[a]} for a in awards]
     collaborators = kg.get_collaborators(copi_name)
-    return {"copi": copi_name, "awards": awards, "collaborators": collaborators}
+    return {"copi": copi_name, "awards": award_details, "collaborators": collaborators}
 
 # GET - Institutions
 @app.get("/api/institutions/")
