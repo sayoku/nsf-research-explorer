@@ -13,7 +13,23 @@ function AwardDetail({ detail, loading }) {
       <p><strong>PI(s):</strong> {pi_nodes?.length ? pi_nodes.join(", ") : "N/A"}</p>
       <p><strong>Co-PI(s):</strong> {copi_nodes?.length ? copi_nodes.join(", ") : "N/A"}</p>
       <p><strong>Abstract:</strong> {award_data.abstract || "N/A"}</p>
-      <a href={link_to_award} target="_blank" rel="noreferrer">View on NSF.gov →</a>
+      <a 
+      href={link_to_award}
+        target="_blank"
+        rel="noreferrer"
+        style={{
+          display: "inline-block",
+          marginTop: "0.5rem",
+          padding: "0.5rem 1rem",
+          background: "#3A6BC0",
+          color: "#fff",
+          borderRadius: "6px",
+          textDecoration: "none",
+          fontWeight: "600",
+        }}
+      >
+        View on NSF.gov →
+      </a>
     </div>
   )
 }

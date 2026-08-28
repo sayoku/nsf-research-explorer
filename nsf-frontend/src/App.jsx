@@ -10,9 +10,13 @@ import AwardDetail from '../components/AwardDetail.jsx'
 import GraphCanvas from '../components/GraphCanvas.jsx'
 import SubgraphQuery from '../components/SubgraphQuery.jsx'
 import NavTabs from '../components/NavTabs.jsx'
+import SubTabs from '../components/SubTabs.jsx'
+import CoPIList from '../components/CoPIList.jsx'
+import CoPIDetail from '../components/CoPIDetail.jsx'
 
 function App() {
   const [activeTab, setActiveTab] = useState("search")
+  const [directoryTab, setDirectoryTab] = useState("pis")
 
   const [query, setQuery] = useState("")
   const [summary, setSummary] = useState(null)
@@ -21,6 +25,7 @@ function App() {
 
   const [awards, setAwards] = useState([])
   const [pis, setPIs] = useState([])
+  const [copis, setCopis] = useState([])
   const [institutions, setInstitutions] = useState([])
   const [listsLoading, setListsLoading] = useState(false)  
   const [listsError, setListsError] = useState(null)
@@ -29,6 +34,11 @@ function App() {
   const [piDetail, setPiDetail] = useState(null)
   const [piDetailLoading, setPiDetailLoading] = useState(false)
   const [piDetailError, setPiDetailError] = useState(null)
+
+  const [selectedCoPI, setSelectedCoPI] = useState(null)
+  const [copiDetail, setCopiDetail] = useState(null)
+  const [copiDetailLoading, setCopiDetailLoading] = useState(false)
+  const [copiDetailError, setCopiDetailError] = useState(null)
 
   const [selectedInst, setSelectedInst] = useState(null)
   const [institutionDetail, setInstitutionDetail] = useState(null)
@@ -70,6 +80,7 @@ function App() {
       ])
       setAwards(awardsData.awards)
       setPIs(pisData.pis) // pisData.copis also exists lol
+      setCopis(pisData.copis) 
       setInstitutions(instData.institutions)
     } catch (err) {
       setListsError(err.message)
@@ -104,6 +115,21 @@ function App() {
       setPiDetailLoading(false)
     }
   }
+
+  const handleSelectCoPI = async (copiName) => {
+    setSelectedCoPI(copiName)
+    setCopiDetailLoading(true)
+    setCopiDetailError(null)
+    try {
+      const data = await api.getCoPI(copiName)
+      setCopiDetail(data)
+    } catch (err) {
+      setCopiDetailError(err.message)
+    } finally {
+      setCopiDetailLoading(false)
+    }
+  }
+
   const handleSelectInstitution = async (instName) => {
     setSelectedInst(instName)
     setInstDetailLoading(true)
@@ -164,36 +190,65 @@ return (
       )}
 
       {activeTab === "directory" && (
-        <>
-          {listsLoading && <p>Loading PIs, institutions, and awards...</p>}
-          {listsError && <p className="error">Error: {listsError}</p>}
-          
-          {!listsLoading && !listsError && (
-            <>
-              <PIsList pis={pis} onSelectPI={handleSelectPI} />
-              {selectedPI && (
-                piDetailError
-                  ? <p className="error">Error: {piDetailError}</p>
-                  : <PIDetail detail={piDetail} loading={piDetailLoading} />
-              )}
+      <>
+        {listsLoading && <p>Loading PIs, institutions, and awards...</p>}
+        {listsError && <p className="error">Error: {listsError}</p>}
 
-              <InstitutionsList institutions={institutions} onSelectInstitution={handleSelectInstitution} />
-              {selectedInst && (
-                instDetailError
-                  ? <p className="error">Error: {instDetailError}</p>
-                  : <InstitutionDetail detail={institutionDetail} loading={instDetailLoading} />
-              )}
+        {!listsLoading && !listsError && (
+          <>
+            <SubTabs
+              active={directoryTab}
+              onChange={setDirectoryTab}
+              counts={{ pis: pis.length, copis: copis.length, institutions: institutions.length, awards: awards.length }}
+            />
 
-              <AwardsTable awards={awards} onSelectAward={handleSelectAward} />
-              {selectedAward && (
-                awardDetailError
-                  ? <p className="error">Error: {awardDetailError}</p>
-                  : <AwardDetail detail={awardDetail} loading={awardDetailLoading} />
-              )}
-            </>
-          )}
-        </>
-      )}
+            {directoryTab === "pis" && (
+              <>
+                <PIsList pis={pis} onSelectPI={handleSelectPI} />
+                {selectedPI && (
+                  piDetailError
+                    ? <p className="error">Error: {piDetailError}</p>
+                    : <PIDetail detail={piDetail} loading={piDetailLoading} />
+                )}
+              </>
+            )}
+
+            {directoryTab === "copis" && (
+              <>
+                <CoPIList copis={copis} onSelectCoPI={handleSelectCoPI} />
+                {selectedCoPI && (
+                  copiDetailError
+                    ? <p className="error">Error: {copiDetailError}</p>
+                    : <CoPIDetail detail={copiDetail} loading={copiDetailLoading} />
+                )}
+              </>
+            )}
+
+            {directoryTab === "institutions" && (
+              <>
+                <InstitutionsList institutions={institutions} onSelectInstitution={handleSelectInstitution} />
+                {selectedInst && (
+                  instDetailError
+                    ? <p className="error">Error: {instDetailError}</p>
+                    : <InstitutionDetail detail={institutionDetail} loading={instDetailLoading} />
+                )}
+              </>
+            )}
+
+            {directoryTab === "awards" && (
+              <>
+                <AwardsTable awards={awards} onSelectAward={handleSelectAward} />
+                {selectedAward && (
+                  awardDetailError
+                    ? <p className="error">Error: {awardDetailError}</p>
+                    : <AwardDetail detail={awardDetail} loading={awardDetailLoading} />
+                )}
+              </>
+            )}
+          </>
+        )}
+      </>
+    )}
 
       {activeTab === "graph" && (
         <>

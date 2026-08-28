@@ -21,6 +21,7 @@ export const api = {
 
   getAwards: () => request("/api/awards/"),
   getPIs: () => request("/api/pis/"),
+  getCoPI: (copiName) => request(`/api/copis/${encodeURIComponent(copiName)}/`),
   getInstitutions: () => request("/api/institutions/"),
 
   getPI: (piName) => request(`/api/pis/${encodeURIComponent(piName)}/`),
