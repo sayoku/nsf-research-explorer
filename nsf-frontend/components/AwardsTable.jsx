@@ -1,23 +1,14 @@
-function AwardsTable({ awards, onSelectAward }) {
+import ExpandableAward from './ExpandableAward.jsx'
+
+function AwardsTable({ awards }) {
   if (!awards || awards.length === 0) return <p>No awards loaded yet.</p>
 
   return (
-    <table>
-      <thead>
-        <tr><th>Award ID</th></tr>
-      </thead>
-      <tbody>
-        {awards.map((award) => (
-          <tr key={award}>
-            <td>
-              <button type="button" onClick={() => onSelectAward(award)}>
-                {award}
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div>
+      {awards.map((award) => (
+        <ExpandableAward key={award} awardId={award} label={award} />
+      ))}
+    </div>
   )
 }
 

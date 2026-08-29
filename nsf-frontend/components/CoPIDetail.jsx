@@ -1,3 +1,5 @@
+import ExpandableAward from "./ExpandableAward.jsx"
+
 function CoPIDetail({ detail, loading }) {
   if (loading) return <p>Loading Co-PI details...</p>
   if (!detail) return null
@@ -14,19 +16,14 @@ function CoPIDetail({ detail, loading }) {
       </div>
 
       {(!awards || awards.length === 0) ? (
-        <p>No awards found for this Co-PI.</p>
+        <p>No awards found for this PI.</p>
       ) : (
-        awards.map((award) => (
-          <details key={award.id} style={{ marginBottom: "0.5rem", border: "1px solid #ddd", borderRadius: "6px", padding: "0.5rem" }}>
-            <summary style={{ cursor: "pointer", fontWeight: 600 }}>
-              {award.title || award.id}
-            </summary>
-            <p><strong>Program:</strong> {award.program || "N/A"}</p>
-            <p><strong>Amount:</strong> {award.amount ? `$${Number(award.amount).toLocaleString()}` : "N/A"}</p>
-            <p><strong>Start Date:</strong> {award.start_date || "N/A"}</p>
-            <p><strong>Abstract:</strong> {award.abstract || "N/A"}</p>
-          </details>
-        ))
+        <>
+          <p><strong>Total Awards:</strong> {awards.length}</p>
+          {awards.map((award) => (
+            <ExpandableAward key={award.id} awardId={award.id} label={award.title || award.id} />
+          ))}
+        </>
       )}
 
       {collaborators && collaborators.length > 0 && (

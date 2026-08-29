@@ -45,10 +45,11 @@ function App() {
   const [instDetailLoading, setInstDetailLoading] = useState(false)
   const [instDetailError, setInstDetailError] = useState(null)
 
-  const [selectedAward, setSelectedAward] = useState(null)
-  const [awardDetail, setAwardDetail] = useState(null)
-  const [awardDetailLoading, setAwardDetailLoading] = useState(false)
-  const [awardDetailError, setAwardDetailError] = useState(null)
+  //AwardsTable is self contained now and should be fine to leave this out
+  // const [selectedAward, setSelectedAward] = useState(null)
+  // const [awardDetail, setAwardDetail] = useState(null)
+  // const [awardDetailLoading, setAwardDetailLoading] = useState(false)
+  // const [awardDetailError, setAwardDetailError] = useState(null)
 
   const [fullGraph, setFullGraph] = useState(null)
   const [activeGraph, setActiveGraph] = useState(null)
@@ -234,17 +235,8 @@ return (
                 )}
               </>
             )}
-
-            {directoryTab === "awards" && (
-              <>
-                <AwardsTable awards={awards} onSelectAward={handleSelectAward} />
-                {selectedAward && (
-                  awardDetailError
-                    ? <p className="error">Error: {awardDetailError}</p>
-                    : <AwardDetail detail={awardDetail} loading={awardDetailLoading} />
-                )}
-              </>
-            )}
+            
+            {directoryTab === "awards" && <AwardsTable awards={awards} />}
           </>
         )}
       </>
