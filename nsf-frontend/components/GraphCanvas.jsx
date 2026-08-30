@@ -74,8 +74,7 @@ function buildTooltip(node, awardConnections) {
   return `<div>${escapeHtml(nodeDisplayLabel(node))} (${escapeHtml(node.type || "?")})</div>`
 }
 
-
-function GraphCanvas({ graphData, height = 600 }) {
+function GraphCanvas({ graphData, height = 600, onNodeSelect }) {
   const fgRef = useRef()
   // console.log("graphData:", graphData)
 
@@ -105,6 +104,7 @@ function GraphCanvas({ graphData, height = 600 }) {
         linkColor={() => "rgba(0,0,0,0.25)"}
         linkWidth={1}
         cooldownTicks={100}
+        onNodeClick={(node) => onNodeSelect?.(node)}
         nodeCanvasObject={(node, ctx, globalScale) => {
           const label = nodeDisplayLabel(node)
           const fontSize = 11 / globalScale

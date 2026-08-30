@@ -166,6 +166,29 @@ const handleSubqueryResult = async (queryText) => {
   setGraphExplanation(data.explanation)
 }
 
+const handleGraphNodeClick = (node) => {
+  if (node.type === "PI") {
+    setActiveTab("directory")
+    setDirectoryTab("pis")
+    handleSelectPI(node.id)
+  } else if (node.type === "Co-PI") {
+    setActiveTab("directory")
+    setDirectoryTab("copis")
+    handleSelectCoPI(node.id)
+  } else if (node.type === "Institution") {
+    setActiveTab("directory")
+    setDirectoryTab("institutions")
+    handleSelectInstitution(node.id)
+  } else if (node.type === "Award") {
+    setActiveTab("directory")
+    setDirectoryTab("awards")
+    // AwardsTable no longer takes onSelectAward; scroll to top so the
+    // Awards tab renders and the person can find/expand this award manually,
+    // since node.id already equals the award's list entry.
+  }
+  // Topic nodes: no detail view, click does nothing
+}
+
 return (
     <div>
       <h1>NSF Research Award Explorer</h1>
@@ -263,7 +286,8 @@ return (
           <SubgraphQuery onResult={handleSubqueryResult} />
           {graphExplanation && <p><em>{graphExplanation}</em></p>}
           <button onClick={() => setActiveGraph(fullGraph)}>Reset to full graph</button>
-          <GraphCanvas graphData={activeGraph} />
+          <p>Click a node to navigate to its detail view.</p>
+          <GraphCanvas graphData={activeGraph} onNodeSelect={handleGraphNodeClick}/>
         </>
       )}
     </div>
