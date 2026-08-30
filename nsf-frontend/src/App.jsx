@@ -55,21 +55,22 @@ function App() {
   const [activeGraph, setActiveGraph] = useState(null)
   const [graphExplanation, setGraphExplanation] = useState(null)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setSearchError(null)
-    try {
-      const data = await api.runQuery(query, 5)
-      setSummary(data.summary)
-      fetchAll() // refetch the lists to account for growing graph
-    } catch (err) {
-      setSearchError(err.message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const [maxAwards, setMaxAwards] = useState(10)
 
+  const handleSubmit = async (e) => {
+  e.preventDefault()
+  setIsLoading(true)
+  setSearchError(null)
+  try {
+    const data = await api.runQuery(query, maxAwards)
+    setSummary(data.summary)
+    fetchAll()
+  } catch (err) {
+    setSearchError(err.message)
+  } finally {
+    setIsLoading(false)
+  }
+}
   const fetchAll = async () => {
     setListsLoading(true)
     setListsError(null)
@@ -181,9 +182,24 @@ return (
               onChange={(e) => setQuery(e.target.value)}
               placeholder="e.g. Water research in Tennessee"
             />
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Searching..." : "Search"}
-        </button>
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? "Searching..." : "Search"}
+            </button>
+
+            <div style={{ marginTop: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <label htmlFor="maxAwards" style={{ fontSize: "0.9rem" }}>
+                Max awards to load: <strong>{maxAwards}</strong>
+              </label>
+              <input
+                id="maxAwards"
+                type="range"
+                min={5}
+                max={100}
+                step={5}
+                value={maxAwards}
+                onChange={(e) => setMaxAwards(Number(e.target.value))}
+              />
+            </div>
           </form>
           {searchError && <p className="error">Error: {searchError}</p>}
           {summary && <ReactMarkdown>{summary}</ReactMarkdown>}
