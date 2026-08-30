@@ -79,12 +79,6 @@ function GraphCanvas({ graphData, height = 600 }) {
   const fgRef = useRef()
   // console.log("graphData:", graphData)
 
-  useEffect(() => {
-    if (fgRef.current && graphData) {
-      setTimeout(() => fgRef.current.zoomToFit(400, 40), 500)
-    }
-  }, [graphData])
-
   if (!graphData || graphData.nodes.length === 0) {
     return <p>No graph data yet.</p>
   }
@@ -111,7 +105,6 @@ function GraphCanvas({ graphData, height = 600 }) {
         linkColor={() => "rgba(0,0,0,0.25)"}
         linkWidth={1}
         cooldownTicks={100}
-        onEngineStop={() => fgRef.current?.zoomToFit(400, 40)}
         nodeCanvasObject={(node, ctx, globalScale) => {
           const label = nodeDisplayLabel(node)
           const fontSize = 11 / globalScale
